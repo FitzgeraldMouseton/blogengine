@@ -1,9 +1,16 @@
 package blogengine.web;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import blogengine.model.Comment;
+import blogengine.model.Post;
+import blogengine.model.User;
+import blogengine.model.Vote;
+import blogengine.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
 
 @RestController
-@RequestMapping("/api/post/")
 public class ApiPostController {
+
 }
