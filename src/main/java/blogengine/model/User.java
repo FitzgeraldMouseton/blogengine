@@ -1,5 +1,6 @@
 package blogengine.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
@@ -46,6 +47,7 @@ public class User {
     private String photo;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
