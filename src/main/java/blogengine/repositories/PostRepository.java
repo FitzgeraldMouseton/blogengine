@@ -9,25 +9,47 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Integer> {
 
-    // Recent posts
+    // ======================== Recent posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
-    // Early posts
+    default List<Post> findRecentPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
+        return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(moderationStatus, date, pageable);
+    }
+
+    // ========================= Early posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
-    // Popular posts
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountDesc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    default List<Post> findEarlyPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
+        return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(moderationStatus, date, pageable);
+    }
 
-    // Find posts ordered by likesCount
+    // ========================= Popular posts
+    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+
+    default List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
+        return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(moderationStatus, date, pageable);
+    }
+    // ========================= Best posts
     @Query("SELECT p FROM Post p JOIN p.votes v GROUP BY p.id ORDER BY sum(case when v.value = 1 then v.value else 0 END) DESC")
-    List<Post> findAllByOrderByLikes(Pageable pageable);
+    List<Post> findBestPosts(Pageable pageable);
 
-    // Find all valid posts by query
+    // ========================= Find posts by query
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTextContaining(ModerationStatus moderationStatus,
                                                                                     Date date, String query, Pageable pageable);
 
+    default List<Post> findPostsByQuery(ModerationStatus moderationStatus, Date date, String query, Pageable pageable){
+        return findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTextContaining(moderationStatus, date, query, pageable);
+    }
+
+    // ========================= Find post by id
+    Optional<Post> findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(int id, ModerationStatus moderationStatus, Date date);
+
+    default Optional<Post> findValidPostById(int id, ModerationStatus moderationStatus, Date date){
+        return findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(id, moderationStatus, date);
+    }
 }

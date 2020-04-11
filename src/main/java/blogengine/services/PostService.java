@@ -5,6 +5,7 @@ import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.dto.postdto.PostDTO;
 import blogengine.models.dto.postdto.PostsInfo;
+import blogengine.models.dto.postdto.SinglePostDto;
 import blogengine.repositories.PostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,19 +37,16 @@ public class PostService {
 
         switch (mode) {
             case "recent":
-                posts = postRepository
-                        .findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus.ACCEPTED, new Date(), pageable);
+                posts = postRepository.findRecentPosts(ModerationStatus.ACCEPTED, new Date(), pageable);
                 break;
             case "early":
-                posts = postRepository
-                        .findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(ModerationStatus.ACCEPTED, new Date(), pageable);
+                posts = postRepository.findEarlyPosts(ModerationStatus.ACCEPTED, new Date(), pageable);
                 break;
             case "popular":
-                posts = postRepository
-                        .findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountDesc(ModerationStatus.ACCEPTED, new Date(), pageable);
+                posts = postRepository.findPopularPosts(ModerationStatus.ACCEPTED, new Date(), pageable);
                 break;
             case "best":
-                posts = postRepository.findAllByOrderByLikes(pageable);
+                posts = postRepository.findBestPosts(pageable);
                 break;
         }
 
@@ -62,8 +60,7 @@ public class PostService {
     public PostsInfo findAllByQuery(int offset, int limit, String query){
 
         Pageable pageable = PageRequest.of(offset, limit);
-        List<Post> posts = postRepository
-                .findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTextContaining(ModerationStatus.ACCEPTED, new Date(), query, pageable);
+        List<Post> posts = postRepository.findPostsByQuery(ModerationStatus.ACCEPTED, new Date(), query, pageable);
         List<PostDTO> postDTOs = getPostDTOs(posts);
         return new PostsInfo(posts.size(), postDTOs);
     }
