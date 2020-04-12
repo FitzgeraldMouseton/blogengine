@@ -29,11 +29,10 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     }
 
     // ========================= Popular posts
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
+            "ORDER BY size(p.comments) DESC")
+    List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
-    default List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
-        return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(moderationStatus, date, pageable);
-    }
     // ========================= Best posts
     @Query("SELECT p FROM Post p JOIN p.votes v GROUP BY p.id ORDER BY sum(case when v.value = 1 then v.value else 0 END) DESC")
     List<Post> findBestPosts(Pageable pageable);
