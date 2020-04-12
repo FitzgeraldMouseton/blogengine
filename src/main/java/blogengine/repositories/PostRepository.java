@@ -30,15 +30,14 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     }
 
     // ========================= Popular posts
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
+            "ORDER BY size(p.comments) DESC")
+    List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
-    default List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
-        return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByViewCountAsc(moderationStatus, date, pageable);
-    }
     // ========================= Best posts
-    @Query("SELECT p FROM Post p JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :time " +
+    @Query("SELECT p FROM Post p JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
             "GROUP BY p.id ORDER BY sum(case when v.value = 1 then v.value else 0 END) DESC")
-    List<Post> findBestPosts(ModerationStatus moderationStatus, Date time, Pageable pageable);
+    List<Post> findBestPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
     // ========================= Find posts by query
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTextContaining(ModerationStatus moderationStatus,
@@ -65,6 +64,6 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
 
     // ========================= Find posts by tag
     @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 " +
-            "AND p.moderationStatus = :moderationStatus AND p.time <= :time and t.name = :tag")
-    List<Post> findAllByTag(ModerationStatus moderationStatus, Date time, String tag, Pageable pageable);
+            "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
+    List<Post> findAllByTag(ModerationStatus moderationStatus, Date date, String tag, Pageable pageable);
 }

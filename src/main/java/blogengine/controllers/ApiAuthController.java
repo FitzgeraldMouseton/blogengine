@@ -1,7 +1,7 @@
 package blogengine.controllers;
 
 import blogengine.models.dto.requests.LoginRequest;
-import blogengine.models.dto.userdto.LoginInfo;
+import blogengine.models.dto.userdto.UserLoginInfo;
 import blogengine.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +20,14 @@ public class ApiAuthController {
     }
 
     @PostMapping("login")
-    public LoginInfo login(@RequestBody LoginRequest loginRequest){
+    public UserLoginInfo login(@RequestBody LoginRequest loginRequest){
 
         log.info("trig");
         return userService.login(loginRequest);
     }
 
-    @GetMapping("login")
-    public String log(){
-        return "Fuck you!";
+    @GetMapping("check")
+    public UserLoginInfo check(){
+        return userService.check();
     }
 }

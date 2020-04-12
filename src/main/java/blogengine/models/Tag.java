@@ -1,10 +1,7 @@
 package blogengine.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -15,6 +12,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "tags")
+@NoArgsConstructor(force = true)
 public class Tag {
 
     @Id

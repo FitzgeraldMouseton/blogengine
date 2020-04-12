@@ -1,7 +1,9 @@
 package blogengine.controllers;
 
+import blogengine.models.Tag;
 import blogengine.models.dto.postdto.PostDTO;
 import blogengine.models.dto.postdto.PostsInfo;
+import blogengine.models.dto.requests.AddPostRequest;
 import blogengine.services.PostService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,5 +50,10 @@ public class ApiPostController {
     @GetMapping("/byTag")
     public PostsInfo searchByTag(@RequestParam int offset, @RequestParam int limit, @RequestParam String tag) throws ParseException {
         return postService.findPostsByTag(offset, limit, tag);
+    }
+
+    @PostMapping
+    public boolean addPost(@RequestBody AddPostRequest request) throws ParseException {
+        return postService.addPost(request);
     }
 }

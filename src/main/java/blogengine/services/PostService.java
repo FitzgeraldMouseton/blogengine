@@ -3,8 +3,11 @@ package blogengine.services;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
+import blogengine.models.Tag;
+import blogengine.models.User;
 import blogengine.models.dto.postdto.PostDTO;
 import blogengine.models.dto.postdto.PostsInfo;
+import blogengine.models.dto.requests.AddPostRequest;
 import blogengine.repositories.PostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
@@ -23,11 +26,13 @@ public class PostService {
 
     private PostDtoMapper postDtoMapper;
     private PostRepository postRepository;
+    private UserService userService;
 
     @Autowired
-    public PostService(PostDtoMapper postDtoMapper, PostRepository postRepository) {
+    public PostService(PostDtoMapper postDtoMapper, PostRepository postRepository, UserService userService) {
         this.postDtoMapper = postDtoMapper;
         this.postRepository = postRepository;
+        this.userService = userService;
     }
 
     public PostsInfo findPosts(int offset, int limit, String mode) {
@@ -69,7 +74,10 @@ public class PostService {
         Optional<Post> postOptional = postRepository.findValidPostById(id, ModerationStatus.ACCEPTED, new Date());
         if (postOptional.isEmpty())
             throw new NoSuchElementException(String.format("Пост с id = %d не найден", id));
-        return postDtoMapper.singlePostToPostDto(postOptional.get());
+        Post post = postOptional.get();
+        post.setViewCount(post.getViewCount() + 1);
+        postRepository.save(post);
+        return postDtoMapper.singlePostToPostDto(post);
     }
 
     public PostsInfo findPostsByDate(int offset, int limit, Date date) {
@@ -83,6 +91,29 @@ public class PostService {
         Pageable pageable = PageRequest.of(offset, limit);
         List<Post> posts = postRepository.findAllByTag(ModerationStatus.ACCEPTED, new Date(), tag, pageable);
         return new PostsInfo(posts.size(), getPostDTOs(posts));
+    }
+
+    //TODO сделать нормально
+    public boolean addPost(AddPostRequest request) throws ParseException {
+
+        User user = userService.findById(10);
+        log.info(request.toString());
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:s");
+        String date1 = dateFormat.format(date);
+        Post post = new Post();
+        post.setTime(dateFormat.parse(date1));
+        post.setActive(request.getActive());
+        post.setTitle(request.getTitle());
+        post.setText(request.getText());
+        for (Tag tag : request.getTags()) {
+            post.getTags().add(tag);
+        }
+        post.setModerationStatus(ModerationStatus.NEW);
+        post.setUser(user);
+        post.setModerator(user);
+        postRepository.save(post);
+        return true;
     }
 
     private List<PostDTO> getPostDTOs(Iterable<Post> posts){
