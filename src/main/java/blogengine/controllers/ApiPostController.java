@@ -28,7 +28,7 @@ public class ApiPostController {
         return postService.findPosts(offset, limit, mode);
     }
 
-    @GetMapping("search")
+    @GetMapping("/search")
     public PostsInfo searchPost(@RequestParam int offset, @RequestParam int limit, @RequestParam String query) {
         return postService.findAllByQuery(offset, limit, query);
     }
