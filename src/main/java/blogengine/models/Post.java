@@ -2,6 +2,7 @@ package blogengine.models;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Setter;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
@@ -13,6 +14,7 @@ import java.util.*;
 
 @Data
 @Entity
+@EqualsAndHashCode(exclude = "tags")
 @Table(name = "posts")
 public class Post {
 

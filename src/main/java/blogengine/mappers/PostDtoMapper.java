@@ -1,6 +1,7 @@
 package blogengine.mappers;
 
 import blogengine.models.Post;
+import blogengine.models.Tag;
 import blogengine.models.Vote;
 import blogengine.models.dto.postdto.PostDTO;
 import org.jsoup.Jsoup;
@@ -11,16 +12,19 @@ import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class PostDtoMapper {
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
     private UserDtoMapper userDtoMapper;
+    private CommentDtoMapper commentDtoMapper;
 
     @Autowired
-    public PostDtoMapper(UserDtoMapper userDtoMapper) {
+    public PostDtoMapper(UserDtoMapper userDtoMapper, CommentDtoMapper commentDtoMapper) {
         this.userDtoMapper = userDtoMapper;
+        this.commentDtoMapper = commentDtoMapper;
     }
 
     public PostDTO postToPostDto(Post post){
@@ -34,6 +38,15 @@ public class PostDtoMapper {
         postDTO.setCommentCount(post.getComments().size());
         postDTO.setViewCount(post.getViewCount());
         setVoteCount(post, postDTO);
+        return postDTO;
+    }
+
+    public PostDTO singlePostToPostDto(Post post){
+
+        PostDTO postDTO = postToPostDto(post);
+        postDTO.setComments(post.getComments().stream()
+                .map(comment -> commentDtoMapper.commentToCommentDto(comment)).collect(Collectors.toList()));
+        postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));
         return postDTO;
     }
 

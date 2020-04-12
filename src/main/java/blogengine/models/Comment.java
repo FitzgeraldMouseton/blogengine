@@ -37,4 +37,6 @@ public class Comment {
     @NotNull
     @Temporal(TemporalType.TIMESTAMP)
     private Date time;
+
+    private String text;
 }
