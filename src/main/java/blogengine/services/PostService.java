@@ -75,6 +75,8 @@ public class PostService {
         if (postOptional.isEmpty())
             throw new NoSuchElementException(String.format("Пост с id = %d не найден", id));
         Post post = postOptional.get();
+        log.info(post.getTitle());
+        log.info(post.getText());
         post.setViewCount(post.getViewCount() + 1);
         postRepository.save(post);
         return postDtoMapper.singlePostToPostDto(post);
