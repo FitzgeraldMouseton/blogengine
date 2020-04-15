@@ -35,6 +35,7 @@ public class UserService {
     public UserLoginInfo login(@RequestBody LoginRequest loginRequest) {
 
         User user = userDetailsService.loadUserByUsername(loginRequest.getEmail());
+        log.info(user.toString());
         UserLoginDto loginDto = userDtoMapper.userToLoginDto(user);
         return new UserLoginInfo(true, loginDto);
     }

@@ -37,9 +37,12 @@ public class PostService {
 
     public PostsInfo findPosts(int offset, int limit, String mode) {
 
+        log.trace("hkj");
         List<Post> posts = null;
+        log.trace("hkj");
         Pageable pageable = PageRequest.of(offset, limit);
 
+        log.trace("hkj");
         switch (mode) {
             case "recent":
                 posts = postRepository.findRecentPosts(ModerationStatus.ACCEPTED, new Date(), pageable);

@@ -2,7 +2,6 @@ package blogengine.repositories;
 
 import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -35,7 +34,7 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
     // ========================= Best posts
-    @Query("SELECT p FROM Post p JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
+    @Query("SELECT p FROM Post p LEFT JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
             "GROUP BY p.id ORDER BY sum(case when v.value = 1 then v.value else 0 END) DESC")
     List<Post> findBestPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
