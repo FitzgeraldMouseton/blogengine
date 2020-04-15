@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserLoginInfo {
+public class LoginInfo {
 
     private boolean result = true;
-    private UserLoginDto user;
+    private LoginDto user;
 }

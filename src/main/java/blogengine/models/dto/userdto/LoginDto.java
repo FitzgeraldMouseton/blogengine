@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-public class UserLoginDto {
+public class LoginDto {
 
     private int id;
     private String name;

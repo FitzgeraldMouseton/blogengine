@@ -1,10 +1,7 @@
 package blogengine.models.dto.postdto;
 
-import blogengine.models.dto.CommentDTO;
 import blogengine.models.dto.userdto.UserDTO;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class PostDTO {
@@ -18,6 +15,4 @@ public class PostDTO {
     private int dislikeCount;
     private int commentCount;
     private int viewCount;
-    private List<CommentDTO> comments;
-    private String[] tags;
 }

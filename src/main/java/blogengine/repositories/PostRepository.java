@@ -35,7 +35,7 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
 
     // ========================= Best posts
     @Query("SELECT p FROM Post p LEFT JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
-            "GROUP BY p.id ORDER BY sum(case when v.value = 1 then v.value else 0 END) DESC")
+            "GROUP BY p.id ORDER BY sum(v.value) DESC")
     List<Post> findBestPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
 
     // ========================= Find posts by query
@@ -52,17 +52,4 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     default Optional<Post> findValidPostById(int id, ModerationStatus moderationStatus, Date date){
         return findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(id, moderationStatus, date);
     }
-
-    // ========================= Find posts by date
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTimeBetween(ModerationStatus moderationStatus,
-                                                                                Date now, Date query, Date limit, Pageable pageable);
-
-    default List<Post> findPostsByDate(ModerationStatus moderationStatus, Date now, Date query, Date limit, Pageable pageable){
-        return findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTimeBetween(moderationStatus, now, query, limit, pageable);
-    }
-
-    // ========================= Find posts by tag
-    @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 " +
-            "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
-    List<Post> findAllByTag(ModerationStatus moderationStatus, Date date, String tag, Pageable pageable);
 }

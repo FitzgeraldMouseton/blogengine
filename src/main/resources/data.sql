@@ -1,9 +1,9 @@
 Insert into users(id, code, email, is_moderator, name, password, photo, reg_time) values
-(1, '0000', 'ernest@gmail.com', 0, 'Ernest Hemingway', '123456', null, '2019-12-26 00:00:01'),
-(2, '0000', 'gleb@gmail.com', 0, 'Gleb Uspenskiy', '123456', null, '2019-02-15 00:00:01'),
-(3, '0000', 'gabriel@gmail.com', 0, 'Gabriel Markes', '123456', null, '2019-01-26 00:00:01'),
-(4, '0000', 'flannery@gmail.com', 0, 'Flannery O\'Connor', '123456', null, '2019-03-08 00:00:01'),
-(5, '0000', 'franz@gmail.com', 0, 'Franz Kafka', '123456', null, '2020-03-01 00:00:01');
+(1, '0000', 'ernest@gmail.com', 0, 'Эрнест Хемингуэй', '123456', null, '2019-12-26 00:00:01'),
+(2, '0000', 'gleb@gmail.com', 0, 'Глеб Успенский', '123456', null, '2019-02-15 00:00:01'),
+(3, '0000', 'gabriel@gmail.com', 0, 'Габриэль Гарсия Маркес', '123456', null, '2019-01-26 00:00:01'),
+(4, '0000', 'flannery@gmail.com', 0, 'Фланнери О\'Коннор', '123456', null, '2019-03-08 00:00:01'),
+(5, '0000', 'franz@gmail.com', 0, 'Франц Кафка', '123456', null, '2020-03-01 00:00:01');
 
 Insert into posts(id, is_active, moderation_status, title, time, text, view_count, moderator_id, user_id) values
 (1, 1, 'ACCEPTED', "По ком звонит колокол", '2020-04-01 00:00:01', 'Он лежал на устланной сосновыми иглами бурой земле...', 5, 3, 1),

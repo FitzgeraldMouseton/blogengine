@@ -1,7 +1,7 @@
 package blogengine.mappers;
 
 import blogengine.models.User;
-import blogengine.models.dto.userdto.UserLoginDto;
+import blogengine.models.dto.userdto.LoginDto;
 import blogengine.models.dto.userdto.UserDTO;
 import org.springframework.stereotype.Component;
 
@@ -13,13 +13,12 @@ public class UserDtoMapper {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
-        userDTO.setPhoto(user.getPhoto());
         return userDTO;
     }
 
-    public UserLoginDto userToLoginDto(User user){
+    public LoginDto userToLoginDto(User user){
 
-        UserLoginDto loginDto = new UserLoginDto();
+        LoginDto loginDto = new LoginDto();
         loginDto.setId(user.getId());
         loginDto.setName(user.getName());
         loginDto.setPhoto(user.getPhoto());
