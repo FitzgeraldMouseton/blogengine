@@ -30,6 +30,7 @@ public class PostDtoMapper {
         postDTO.setTime(dateFormat.format(post.getTime()));
         postDTO.setUser(userDtoMapper.userToUserDto(post.getUser()));
         postDTO.setTitle(post.getTitle());
+        postDTO.setText(post.getText());
         postDTO.setAnnounce(getAnnounce(post));
         postDTO.setCommentCount(post.getComments().size());
         postDTO.setViewCount(post.getViewCount());

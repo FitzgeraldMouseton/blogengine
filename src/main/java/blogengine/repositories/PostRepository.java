@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends CrudRepository<Post, Integer> {
 
+    // ======================== Count valid posts
+    long countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, Date date);
+
     // ======================== Recent posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, Date date, Pageable pageable);
 

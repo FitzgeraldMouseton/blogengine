@@ -10,6 +10,7 @@ public class PostDTO {
     private String time;
     private UserDTO user;
     private String title;
+    private String text;
     private String announce;
     private int likeCount;
     private int dislikeCount;

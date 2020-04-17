@@ -5,10 +5,9 @@ import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.dto.postdto.PostDTO;
 import blogengine.models.dto.postdto.PostsInfo;
-import blogengine.models.dto.postdto.SinglePostDto;
 import blogengine.repositories.PostRepository;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,22 +18,17 @@ import java.util.List;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class PostService {
 
     private PostDtoMapper postDtoMapper;
     private PostRepository postRepository;
 
-    @Autowired
-    public PostService(PostDtoMapper postDtoMapper, PostRepository postRepository) {
-        this.postDtoMapper = postDtoMapper;
-        this.postRepository = postRepository;
-    }
-
     public PostsInfo findPosts(int offset, int limit, String mode) {
 
         List<Post> posts = null;
+        long postsCount = postRepository.countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, new Date());
         Pageable pageable = PageRequest.of(offset, limit);
-
         switch (mode) {
             case "recent":
                 posts = postRepository.findRecentPosts(ModerationStatus.ACCEPTED, new Date(), pageable);
@@ -54,7 +48,7 @@ public class PostService {
             throw new IllegalArgumentException("Wrong argument 'mode': " + mode);
 
         List<PostDTO> postDTOs = getPostDTOs(posts);
-        return new PostsInfo(posts.size(), postDTOs);
+        return new PostsInfo(postsCount, postDTOs);
     }
 
     public PostsInfo findAllByQuery(int offset, int limit, String query){
