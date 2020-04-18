@@ -1,8 +1,7 @@
 package blogengine.models;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -23,5 +22,6 @@ public class Tag {
     private String name;
 
     @ManyToMany(mappedBy = "tags")
+    @JsonIgnore
     private Set<Post> posts = new HashSet<>();
 }

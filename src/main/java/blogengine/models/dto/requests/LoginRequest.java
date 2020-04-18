@@ -1,8 +1,5 @@
 package blogengine.models.dto.requests;
 
-import lombok.Data;
-
-@Data
 public class LoginRequest {
 
     private String e_mail;
@@ -10,5 +7,9 @@ public class LoginRequest {
 
     public String getEmail(){
         return e_mail;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

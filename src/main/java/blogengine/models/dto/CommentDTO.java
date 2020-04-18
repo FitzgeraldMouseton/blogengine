@@ -9,7 +9,7 @@ import java.util.Date;
 public class CommentDTO {
 
     private int id;
-    private Date time;
-    private UserDTO user;
+    private String time;
     private String text;
+    private UserDTO user;
 }
