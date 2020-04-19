@@ -13,7 +13,6 @@ public class UserDtoMapper {
     public UserDTO userToUserDto(User user) {
 
         UserDTO userDTO = new UserDTO();
-        log.info(user.toString());
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
         userDTO.setPhoto(user.getPhoto());

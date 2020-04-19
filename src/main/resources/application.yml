@@ -1,12 +1,20 @@
 spring:
   jpa:
+#    show-sql: true
     hibernate:
       ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
+#        format_sql: true
   datasource:
     url: jdbc:mysql://localhost:3306/blog_engine?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
     password: password
     initialization-mode: always
+  mail:
+    host: smtp.yandex.ru
+    username: email@yandex.ru
+    password: password
+    port: 465
+    protocol: smtps
