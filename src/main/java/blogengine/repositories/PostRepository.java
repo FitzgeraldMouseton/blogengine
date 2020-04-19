@@ -7,62 +7,64 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Integer> {
 
-    long countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, Date date);
+    long countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, LocalDateTime date);
 
     // ======================== Recent posts
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
-    default List<Post> findRecentPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
+    default List<Post> findRecentPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable){
         return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(moderationStatus, date, pageable);
     }
 
     // ========================= Early posts
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
-    default List<Post> findEarlyPosts(ModerationStatus moderationStatus, Date date, Pageable pageable){
+    default List<Post> findEarlyPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable){
         return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(moderationStatus, date, pageable);
     }
 
     // ========================= Popular posts
     @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
             "ORDER BY size(p.comments) DESC")
-    List<Post> findPopularPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    List<Post> findPopularPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
     // ========================= Best posts
     @Query("SELECT p FROM Post p LEFT JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
             "GROUP BY p.id ORDER BY sum(v.value) DESC")
-    List<Post> findBestPosts(ModerationStatus moderationStatus, Date date, Pageable pageable);
+    List<Post> findBestPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
     // ========================= Find posts by query
     @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
             "AND (p.text LIKE %:query% or p.title LIKE %:query%)")
-    List<Post> findPostsByQuery(ModerationStatus moderationStatus, Date date, String query, Pageable pageable);
+    List<Post> findPostsByQuery(ModerationStatus moderationStatus, LocalDateTime date, String query, Pageable pageable);
 
     // ========================= Find post by id
-    Optional<Post> findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(int id, ModerationStatus moderationStatus, Date date);
+    Optional<Post> findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(int id, ModerationStatus moderationStatus, LocalDateTime date);
 
-    default Optional<Post> findValidPostById(int id, ModerationStatus moderationStatus, Date date){
+    default Optional<Post> findValidPostById(int id, ModerationStatus moderationStatus, LocalDateTime date){
         return findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(id, moderationStatus, date);
     }
 
     // ========================= Find posts by date
-    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTimeBetween(ModerationStatus moderationStatus,
-                                                                                Date now, Date query, Date limit, Pageable pageable);
-
-    default List<Post> findPostsByDate(ModerationStatus moderationStatus, Date now, Date query, Date limit, Pageable pageable){
-        return findAllByModerationStatusAndTimeBeforeAndActiveTrueAndTimeBetween(moderationStatus, now, query, limit, pageable);
-    }
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time between :startOfDay and :endOfDay")
+    List<Post> findPostsByDate(ModerationStatus moderationStatus, LocalDateTime startOfDay, LocalDateTime endOfDay, Pageable pageable);
 
     // ========================= Find posts by tag
     @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 " +
             "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
-    List<Post> findAllByTag(ModerationStatus moderationStatus, Date date, String tag, Pageable pageable);
+    List<Post> findAllByTag(ModerationStatus moderationStatus, LocalDateTime date, String tag, Pageable pageable);
 
+    // ========================= Find all posts
+    List<Post> findAllBy();
+
+    // ========================= Find posts by year
+//    @Query(value = "select * from posts where extract(year from time) = :year", nativeQuery = true)
+//    List<Post> findAllByYear(String year);
 }

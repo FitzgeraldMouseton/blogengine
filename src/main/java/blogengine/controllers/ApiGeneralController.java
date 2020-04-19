@@ -1,14 +1,19 @@
 package blogengine.controllers;
 
-import blogengine.models.dto.BlogInfo;
-import blogengine.models.dto.TagDto;
-import blogengine.models.dto.settingsDto;
+import blogengine.models.dto.SettingsDto;
+import blogengine.models.dto.blogdto.BlogInfo;
+import blogengine.models.dto.blogdto.BlogStatisticsDto;
+import blogengine.models.dto.blogdto.CalendarDto;
+import blogengine.models.dto.blogdto.TagsResponse;
+import blogengine.services.GeneralService;
+import blogengine.services.PostService;
 import blogengine.services.TagService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @AllArgsConstructor
@@ -17,6 +22,8 @@ import java.util.List;
 public class ApiGeneralController {
 
     private TagService tagService;
+    private PostService postService;
+    private GeneralService generalService;
 
     @GetMapping("/init")
     public BlogInfo getBlogInfo() {
@@ -25,13 +32,23 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/tag")
-    public List<TagDto> getTags(String query) {
+    public TagsResponse getTags(String query) {
         return tagService.findTagsByName(query);
+    }
+
+    @GetMapping("statistics/all")
+    public BlogStatisticsDto getGeneralStatistics(){
+        return generalService.getBlogStatistics();
     }
 
     //TODO заглушка, переделать, когда будет авторизация
     @GetMapping("/settings")
-    public settingsDto getSettings(){
-        return new settingsDto();
+    public SettingsDto getSettings(){
+        return new SettingsDto();
+    }
+
+    @GetMapping("calendar")
+    public CalendarDto calendar(@RequestParam int year){
+        return generalService.calendar(year);
     }
 }

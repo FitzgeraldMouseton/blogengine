@@ -1,6 +1,5 @@
-package blogengine.models.dto.postdto;
+package blogengine.models.dto.blogdto;
 
-import blogengine.models.dto.postdto.PostDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

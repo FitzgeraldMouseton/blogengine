@@ -1,4 +1,4 @@
-package blogengine.models.dto;
+package blogengine.models.dto.blogdto;
 
 import lombok.Getter;
 import org.springframework.stereotype.Component;

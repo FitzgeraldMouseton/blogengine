@@ -3,7 +3,7 @@ package blogengine.mappers;
 import blogengine.models.Post;
 import blogengine.models.Tag;
 import blogengine.models.Vote;
-import blogengine.models.dto.postdto.PostDTO;
+import blogengine.models.dto.blogdto.PostDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +11,14 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 public class PostDtoMapper {
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
     private UserDtoMapper userDtoMapper;
     private CommentDtoMapper commentDtoMapper;
 

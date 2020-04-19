@@ -1,23 +1,36 @@
 package blogengine.models;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor(force = true)
 @Table(name = "posts")
 public class Post {
 
+    public Post(@NotNull int id, @NotNull boolean active, @NotNull ModerationStatus moderationStatus, @NotNull User user, @NotNull User moderator, @NotNull LocalDateTime time, @NotNull String title, @NotNull String text, @NotNull int viewCount) {
+        this.id = id;
+        this.active = active;
+        this.moderationStatus = moderationStatus;
+        this.user = user;
+        this.moderator = moderator;
+        this.time = time;
+        this.title = title;
+        this.text = text;
+        this.viewCount = viewCount;
+    }
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull
@@ -38,8 +51,7 @@ public class Post {
     private User moderator;
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date time;
+    private LocalDateTime time;
 
     @NotNull
     private String title;

@@ -5,8 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class TagDto {
-
-    private String name;
-    private double weight;
+public class SimpleResponseDto {
+    private boolean result;
 }

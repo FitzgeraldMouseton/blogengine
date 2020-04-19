@@ -1,12 +1,12 @@
-package blogengine.models.dto.userdto;
+package blogengine.models.dto.authdto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class UserLoginInfo {
+public class AuthenticationResponse {
 
-    private boolean result = true;
+    private boolean result;
     private UserLoginDto user;
 }

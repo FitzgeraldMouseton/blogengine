@@ -3,9 +3,12 @@ package blogengine.models;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import org.apache.tomcat.jni.Local;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -27,8 +30,7 @@ public class Vote {
     private Post post;
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date time;
+    private LocalDateTime time;
 
     @NotNull
     private byte value;

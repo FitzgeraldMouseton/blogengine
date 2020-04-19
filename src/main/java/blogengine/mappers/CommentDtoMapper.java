@@ -1,18 +1,19 @@
 package blogengine.mappers;
 
 import blogengine.models.Comment;
-import blogengine.models.dto.CommentDTO;
+import blogengine.models.dto.blogdto.CommentDTO;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Component
 public class CommentDtoMapper {
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private UserDtoMapper userDtoMapper;
 
     @Autowired

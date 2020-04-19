@@ -2,15 +2,15 @@ package blogengine.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -31,10 +31,8 @@ public class User{
 
     @NotNull
     @Column(name = "reg_time")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date regTime;
+    private LocalDateTime regTime;
 
-    @NotNull
     private String name;
 
     @NotNull
