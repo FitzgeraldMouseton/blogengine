@@ -1,6 +1,6 @@
 package blogengine.services;
 
-import blogengine.exceptions.IncorrectCaptchaCode;
+import blogengine.exceptions.IncorrectCaptchaCodeException;
 import blogengine.exceptions.UserAlreadyExistsException;
 import blogengine.mappers.UserDtoMapper;
 import blogengine.models.CaptchaCode;
@@ -22,9 +22,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.persistence.NoResultException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.net.http.HttpRequest;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -75,9 +73,9 @@ public class AuthService {
 
         if (userService.findByEmail(registerRequest.getEmail()) != null)
             throw new UserAlreadyExistsException("Этот e-mail уже зарегистрирован");
-        CaptchaCode captcha = captchaService.findBySecretCode(registerRequest.getCaptcha_secret());
-        if (captcha == null){
-            throw new IncorrectCaptchaCode("Код с картинки введён неверно");
+        CaptchaCode captcha = captchaService.findBySecretCode(registerRequest.getCaptchaSecret());
+        if (captcha == null || !captcha.getCode().equals(registerRequest.getCaptchaCode())){
+            throw new IncorrectCaptchaCodeException("Код с картинки введён неверно");
         }
 //        String name = registerRequest.getName();
 //        if (name.length() < 3 || !name.chars().allMatch(Character::isAlphabetic)){

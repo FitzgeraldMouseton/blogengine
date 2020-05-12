@@ -1,6 +1,6 @@
 package blogengine.controllers;
 
-import blogengine.exceptions.IncorrectCaptchaCode;
+import blogengine.exceptions.IncorrectCaptchaCodeException;
 import blogengine.exceptions.UserAlreadyExistsException;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
@@ -29,7 +29,7 @@ public class ApiAuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         AuthenticationResponse response = authService.login(loginRequest);
         if (response == null){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new SimpleResponseDto(false));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SimpleResponseDto(false));
         }
         return ResponseEntity.ok(response);
     }
@@ -39,7 +39,7 @@ public class ApiAuthController {
         HashMap<String, String> errors = new HashMap<>();
         try {
             return ResponseEntity.ok().body(authService.register(registerRequest));
-        } catch (IncorrectCaptchaCode ex) {
+        } catch (IncorrectCaptchaCodeException ex) {
             errors.put("captcha", ex.getMessage());
         } catch (IllegalArgumentException ex) {
             errors.put("name", ex.getMessage());
@@ -53,7 +53,7 @@ public class ApiAuthController {
     public ResponseEntity<?> check(){
         AuthenticationResponse response = authService.check();
         if (response == null){
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new SimpleResponseDto(false));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SimpleResponseDto(false));
         }
         return ResponseEntity.ok(response);
     }
