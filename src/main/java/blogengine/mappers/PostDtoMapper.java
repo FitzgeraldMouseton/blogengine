@@ -1,8 +1,10 @@
 package blogengine.mappers;
 
+import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.Tag;
 import blogengine.models.Vote;
+import blogengine.models.dto.blogdto.AddPostRequest;
 import blogengine.models.dto.blogdto.PostDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -11,6 +13,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
@@ -52,6 +55,17 @@ public class PostDtoMapper {
                 .map(comment -> commentDtoMapper.commentToCommentDto(comment)).collect(Collectors.toList()));
         postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));
         return postDTO;
+    }
+
+    public Post addPostRequestToPost(AddPostRequest request){
+        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        Post post = new Post();
+        post.setTitle(request.getTitle());
+        post.setText(request.getText());
+        post.setTime(LocalDateTime.parse(request.getTime(), dateFormat));
+        post.setActive(request.isActive());
+        post.setTags(request.getTags());
+        return post;
     }
 
     private String getAnnounce(Post post){

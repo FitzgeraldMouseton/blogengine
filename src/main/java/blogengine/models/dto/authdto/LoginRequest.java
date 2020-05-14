@@ -1,26 +1,14 @@
 package blogengine.models.dto.authdto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
+@Data
 @AllArgsConstructor
 public class LoginRequest {
 
-    private String e_mail;
+    @JsonProperty("e_mail")
+    private String email;
     private String password;
-
-    public String getEmail(){
-        return e_mail;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setEmail(String e_mail) {
-        this.e_mail = e_mail;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

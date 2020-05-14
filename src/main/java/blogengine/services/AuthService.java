@@ -2,6 +2,7 @@ package blogengine.services;
 
 import blogengine.exceptions.IncorrectCaptchaCodeException;
 import blogengine.exceptions.UserAlreadyExistsException;
+import blogengine.exceptions.UserNotFoundException;
 import blogengine.mappers.UserDtoMapper;
 import blogengine.models.CaptchaCode;
 import blogengine.models.User;
@@ -22,6 +23,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.persistence.NoResultException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.time.Instant;
 
 @Slf4j
@@ -52,11 +54,11 @@ public class AuthService {
     private Integer restoreCodeExistenceTime;
 
     @Transactional
-    public AuthenticationResponse login(LoginRequest loginRequest) {
+    public AuthenticationResponse login(LoginRequest loginRequest) throws UserNotFoundException {
         AuthenticationResponse loginResponse = null;
         User user = userService.findByEmail(loginRequest.getEmail());
         if (user == null){
-            throw new NoResultException("Не найден пользователь с таким адресом почты: " + loginRequest.getEmail());
+            throw new UserNotFoundException("Не найден пользователь с таким адресом почты: " + loginRequest.getEmail());
         }
         if (bCryptPasswordEncoder.matches(loginRequest.getPassword(), user.getPassword())){
             String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
@@ -89,24 +91,23 @@ public class AuthService {
         return new SimpleResponseDto(true);
     }
 
-    public AuthenticationResponse check(){
-        AuthenticationResponse authenticationResponse = null;
+    public AuthenticationResponse check() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         if (!sessionStorage.getSessions().isEmpty()){
             int userId = sessionStorage.getSessions().get(sessionId);
             User user = userService.findById(userId);
             UserLoginDto userDTO = userDtoMapper.userToLoginDto(user);
-            authenticationResponse = new AuthenticationResponse(true, userDTO);
+            return new AuthenticationResponse(true, userDTO);
         }
-        return authenticationResponse;
+        return null;
     }
 
     @Transactional
     public SimpleResponseDto sendRestorePasswordMessage(String email){
-        String code = RandomStringUtils.randomAlphanumeric(40);
         User user = userService.findByEmail(email);
         if (user == null)
             return new SimpleResponseDto(false);
+        String code = RandomStringUtils.randomAlphanumeric(40);
         user.setCode(code);
         userService.save(user);
         String message = "Для восстановления пароля перейдите по ссылке http://localhost:8080/login/change-password/" + code;
@@ -133,7 +134,7 @@ public class AuthService {
         if(captchaCode == null){
             throw new IllegalArgumentException("Код с картинки введён неверно");
         }
-        if (captchaCode.getSecretCode().equals(dto.getCaptcha_secret())) {
+        if (captchaCode.getSecretCode().equals(dto.getCaptchaSecret())) {
             user.setPassword(dto.getPassword());
             return true;
         }

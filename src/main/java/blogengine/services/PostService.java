@@ -3,8 +3,6 @@ package blogengine.services;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
-import blogengine.models.dto.blogdto.BlogStatisticsDto;
-import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.PostDTO;
 import blogengine.models.dto.blogdto.PostsInfo;
 import blogengine.repositories.PostRepository;
@@ -16,9 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -34,6 +33,10 @@ public class PostService {
 
     public List<Post> getAllPots(){
         return postRepository.findAllBy();
+    }
+
+    public void save(Post post){
+        postRepository.save(post);
     }
 
     public PostsInfo findPosts(int offset, int limit, String mode) {

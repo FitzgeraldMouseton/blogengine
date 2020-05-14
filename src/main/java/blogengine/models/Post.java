@@ -29,8 +29,8 @@ public class Post {
     }
 
     @Id
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
-    //@Setter(AccessLevel.PRIVATE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull

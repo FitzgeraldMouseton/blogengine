@@ -2,6 +2,7 @@ package blogengine.controllers;
 
 import blogengine.exceptions.IncorrectCaptchaCodeException;
 import blogengine.exceptions.UserAlreadyExistsException;
+import blogengine.exceptions.UserNotFoundException;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
 import blogengine.services.AuthService;
@@ -27,11 +28,13 @@ public class ApiAuthController {
 
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        AuthenticationResponse response = authService.login(loginRequest);
-        if (response == null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SimpleResponseDto(false));
+        HashMap<String, String> errors = new HashMap<>();
+        try {
+            return ResponseEntity.ok().body(authService.login(loginRequest));
+        } catch (UserNotFoundException ex) {
+            errors.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
         }
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("register")
@@ -50,10 +53,10 @@ public class ApiAuthController {
     }
 
     @GetMapping("check")
-    public ResponseEntity<?> check(){
+    public ResponseEntity<?> check() {
         AuthenticationResponse response = authService.check();
         if (response == null){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SimpleResponseDto(false));
+            return ResponseEntity.ok().body(new SimpleResponseDto(false));
         }
         return ResponseEntity.ok(response);
     }
@@ -64,11 +67,11 @@ public class ApiAuthController {
     }
 
     @PostMapping("restore")
-    public SimpleResponseDto restorePassword(@RequestParam String email){
-        return authService.sendRestorePasswordMessage(email);
+    public SimpleResponseDto restorePassword(@RequestBody RestorePasswordRequest request){
+        return authService.sendRestorePasswordMessage(request.getEmail());
     }
 
-    @PostMapping("password/{code}")
+    @PostMapping("password")
     public ResponseEntity setNewPassword(@PathVariable String code, @RequestBody SetPassRequest setPassDto){
         HashMap<String, String> errors = new HashMap<>();
         try {

@@ -33,6 +33,7 @@ public class User{
     @Column(name = "reg_time")
     private LocalDateTime regTime;
 
+    @NotNull
     private String name;
 
     @NotNull

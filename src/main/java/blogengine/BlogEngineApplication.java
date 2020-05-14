@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 @EnableAsync
 @EnableScheduling
@@ -32,5 +33,15 @@ public class BlogEngineApplication {
                 "ThreadPoolTaskScheduler");
         threadPoolTaskScheduler.initialize();
         return threadPoolTaskScheduler;
+    }
+
+    @Bean
+    public CommonsMultipartResolver multipartResolver() {
+
+        CommonsMultipartResolver cmr = new CommonsMultipartResolver();
+        int maxUploadSizeInMb = 5 * 1024 * 1024;
+        //cmr.setMaxUploadSize(maxUploadSizeInMb * 2);
+        cmr.setMaxUploadSizePerFile(maxUploadSizeInMb);
+        return cmr;
     }
 }

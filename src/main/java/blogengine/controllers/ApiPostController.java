@@ -3,25 +3,20 @@ package blogengine.controllers;
 import blogengine.models.dto.blogdto.PostDTO;
 import blogengine.models.dto.blogdto.PostsInfo;
 import blogengine.services.PostService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @RestController
 @RequestMapping("api/post")
+@AllArgsConstructor
 public class ApiPostController {
 
     private PostService postService;
-
-    @Autowired
-    public ApiPostController(PostService postService) {
-        this.postService = postService;
-    }
 
     @GetMapping
     public PostsInfo getPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String mode) {
@@ -39,7 +34,7 @@ public class ApiPostController {
     }
 
     @GetMapping("/byDate")
-    public PostsInfo searchByDate(@RequestParam int offset, @RequestParam int limit, @RequestParam String date) throws ParseException {
+    public PostsInfo searchByDate(@RequestParam int offset, @RequestParam int limit, @RequestParam String date) {
         log.info(date);
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate dateQuery = LocalDate.parse(date, dateFormat);
