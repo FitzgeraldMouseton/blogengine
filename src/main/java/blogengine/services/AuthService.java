@@ -77,10 +77,10 @@ public class AuthService {
         if (captcha == null || !captcha.getCode().equals(registerRequest.getCaptchaCode())){
             throw new IncorrectCaptchaCodeException("Код с картинки введён неверно");
         }
-//        String name = registerRequest.getName();
-//        if (name.length() < 3 || !name.chars().allMatch(Character::isAlphabetic)){
-//            throw new IllegalArgumentException("Имя указано неверно");
-//        }
+        String name = registerRequest.getName();
+        if (name.length() < 3 || !name.chars().allMatch(Character::isAlphabetic)){
+            throw new IllegalArgumentException("Имя указано неверно");
+        }
         User user = userDtoMapper.registerDtoToUser(registerRequest);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userService.save(user);
