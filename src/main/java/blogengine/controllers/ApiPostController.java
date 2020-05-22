@@ -1,34 +1,30 @@
 package blogengine.controllers;
 
-import blogengine.mappers.PostDtoMapper;
-import blogengine.models.ModerationStatus;
-import blogengine.models.Post;
+import blogengine.exceptions.UserNotFoundException;
 import blogengine.models.dto.SimpleResponseDto;
-import blogengine.models.dto.blogdto.AddPostRequest;
-import blogengine.models.dto.blogdto.PostDTO;
-import blogengine.models.dto.blogdto.PostsInfo;
+import blogengine.models.dto.ErrorResponse;
+import blogengine.models.dto.blogdto.postdto.AddPostRequest;
+import blogengine.models.dto.blogdto.votedto.VoteRequest;
+import blogengine.models.dto.blogdto.postdto.PostDto;
+import blogengine.models.dto.blogdto.postdto.PostsInfo;
 import blogengine.services.PostService;
-import blogengine.services.UserService;
-import blogengine.util.SessionStorage;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
 
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("api/post")
-@AllArgsConstructor
 public class ApiPostController {
 
-    private PostService postService;
-    private PostDtoMapper postDtoMapper;
-    private SessionStorage sessionStorage;
-    private UserService userService;
+    private final PostService postService;
 
     @GetMapping
     public PostsInfo getPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String mode) {
@@ -41,8 +37,13 @@ public class ApiPostController {
     }
 
     @GetMapping("/{id}")
-    public PostDTO getPostById(@PathVariable Integer id){
-        return postService.findValidPostById(id);
+    public PostDto getPostById(@PathVariable Integer id){
+        try {
+            return postService.findValidPostById(id);
+        } catch (UserNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @GetMapping("/byDate")
@@ -57,13 +58,54 @@ public class ApiPostController {
         return postService.findPostsByTag(offset, limit, tag);
     }
 
-//    @PostMapping
-//    public SimpleResponseDto addPost(@RequestBody AddPostRequest request){
-//        Post post = postDtoMapper.addPostRequestToPost(request);
-//        post.setModerationStatus(ModerationStatus.NEW);
-//        post.setUser(userService.findById(2));
-//        post.setModerator(userService.findById(2));
-//        postService.save(post);
-//        return new SimpleResponseDto(true);
-//    }
+    @PostMapping
+    public ResponseEntity addPost(@RequestBody AddPostRequest request){
+        HashMap<String, String> errors = new HashMap<>();
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(postService.addPost(request));
+        } catch (IllegalArgumentException ex){
+            if(ex.getLocalizedMessage().equals("Заголовок не установлен")){
+                errors.put("title", "Заголовок не установлен");
+            } else if (ex.getLocalizedMessage().equals("Текст публикации слишком короткий")){
+                errors.put("text", "Текст публикации слишком короткий");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity editPost(@PathVariable int id, @RequestBody AddPostRequest request){
+        log.info("trig");
+        HashMap<String, String> errors = new HashMap<>();
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(postService.editPost(id, request));
+        } catch (IllegalArgumentException ex){
+            if(ex.getLocalizedMessage().equals("Заголовок не установлен")){
+                errors.put("title", "Заголовок не установлен");
+            } else if (ex.getLocalizedMessage().equals("Текст публикации слишком короткий")){
+                errors.put("text", "Текст публикации слишком короткий");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    }
+
+    @PostMapping("like")
+    public SimpleResponseDto addLike(@RequestBody VoteRequest request){
+        return postService.likePost(request);
+    }
+
+    @PostMapping("dislike")
+    public SimpleResponseDto dislikePost(@RequestBody VoteRequest request){
+        return postService.dislikePost(request);
+    }
+
+    @GetMapping("/my")
+    public PostsInfo getCurrentUserPosts(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String status){
+        return postService.findCurrentUserPosts(offset, limit, status);
+    }
+
+    @GetMapping("moderation")
+    public PostsInfo getPostsForModeration(@RequestParam Integer offset, @RequestParam Integer limit, @RequestParam String status){
+        return postService.postsForModeration(offset, limit, status);
+    }
 }

@@ -10,10 +10,10 @@ import javax.validation.constraints.NotNull;
 @Data
 @Entity
 @Table(name = "global_settings")
-public class GlobalSettings {
+public class GlobalSetting {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.PRIVATE)
     private int id;
 
@@ -24,5 +24,5 @@ public class GlobalSettings {
     private String name;
 
     @NotNull
-    private String value;
+    private Boolean value;
 }

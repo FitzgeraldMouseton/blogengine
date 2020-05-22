@@ -2,6 +2,7 @@ package blogengine.repositories;
 
 import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
+import blogengine.models.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -19,14 +20,14 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     // ======================== Recent posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
-    default List<Post> findRecentPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable){
+    default List<Post> getRecentPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable) {
         return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(moderationStatus, date, pageable);
     }
 
     // ========================= Early posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
-    default List<Post> findEarlyPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable){
+    default List<Post> getEarlyPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable) {
         return findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeAsc(moderationStatus, date, pageable);
     }
 
@@ -48,7 +49,7 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     // ========================= Find post by id
     Optional<Post> findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(int id, ModerationStatus moderationStatus, LocalDateTime date);
 
-    default Optional<Post> findValidPostById(int id, ModerationStatus moderationStatus, LocalDateTime date){
+    default Optional<Post> getValidPostById(int id, ModerationStatus moderationStatus, LocalDateTime date) {
         return findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(id, moderationStatus, date);
     }
 
@@ -64,7 +65,38 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     // ========================= Find all posts
     List<Post> findAllBy();
 
-    // ========================= Find posts by year
-//    @Query(value = "select * from posts where extract(year from time) = :year", nativeQuery = true)
-//    List<Post> findAllByYear(String year);
+    // ======================== User's posts count
+
+    Long countAllByUser(User user);
+
+    // ======================== Inactive posts of user
+    List<Post> findAllByUserAndActiveFalseOrderByTimeDesc(User user, Pageable pageable);
+
+    default List<Post> getCurrentUserInactivePosts(User user, Pageable pageable) {
+        return findAllByUserAndActiveFalseOrderByTimeDesc(user, pageable);
+    }
+
+    // ========================= Active posts of user
+    List<Post> findAllByUserAndModerationStatusAndActiveTrue(User user, ModerationStatus moderationStatus, Pageable pageable);
+
+    default List<Post> getCurrentUserActivePosts(User user, ModerationStatus moderationStatus, Pageable pageable) {
+        return findAllByUserAndModerationStatusAndActiveTrue(user, moderationStatus, pageable);
+    }
+
+    // ======================== Posts for moderation
+    List<Post> findAllByModeratorAndActiveTrueAndModerationStatus(User moderator, ModerationStatus moderationStatus, Pageable pageable);
+
+    default List<Post> getPostsForModeration(User moderator, ModerationStatus moderationStatus, Pageable pageable) {
+        return findAllByModeratorAndActiveTrueAndModerationStatus(moderator, moderationStatus, pageable);
+    }
+
+    // ======================== Count posts for moderation
+    Long countAllByModeratorAndActiveTrue(User moderator);
+
+    // ======================== Find first post
+    Optional<Post> findFirstByOrderByTime();
+
+    // ======================== Find first post
+    @Query("select sum(p.viewCount) from Post p where p.user = :user")
+    Long countUserPostsViews(User user);
 }

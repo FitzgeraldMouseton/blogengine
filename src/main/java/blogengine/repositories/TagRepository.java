@@ -6,9 +6,12 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TagRepository extends CrudRepository<Tag, Integer> {
+
+    Optional<Tag> findTagByName(String name);
 
     @Query("Select t from Tag t join Post p where p.active = 1 and p.moderationStatus = 'ACCEPTED' and p.time <= current_timestamp " +
             "and t.name like :query%")

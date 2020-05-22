@@ -1,10 +1,10 @@
 package blogengine.services;
 
 import blogengine.models.Tag;
-import blogengine.models.dto.blogdto.SingleTagDto;
-import blogengine.models.dto.blogdto.TagsResponse;
+import blogengine.models.dto.blogdto.tagdto.SingleTagDto;
+import blogengine.models.dto.blogdto.tagdto.TagsResponse;
 import blogengine.repositories.TagRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.util.Precision;
 import org.springframework.stereotype.Service;
@@ -14,10 +14,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class TagService {
 
-    private TagRepository tagRepository;
+    private final TagRepository tagRepository;
+
+    public void save(Tag tag){
+        tagRepository.save(tag);
+    }
+
+    public Optional<Tag> findTagByName(String name){
+        return tagRepository.findTagByName(name);
+    }
 
     public TagsResponse findTagsByName(String query) {
         List<Tag> tagList = (query == null) ? tagRepository.findAllByEmptyQuery()

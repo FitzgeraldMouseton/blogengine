@@ -1,4 +1,4 @@
-package blogengine.models.dto.authdto;
+package blogengine.models.dto;
 
 import lombok.Data;
 

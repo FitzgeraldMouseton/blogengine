@@ -8,6 +8,7 @@ public class SetPassRequest {
 
     private String password;
     private String captcha;
+    private String code;
     @JsonProperty("captcha_secret")
     private String captchaSecret;
 }

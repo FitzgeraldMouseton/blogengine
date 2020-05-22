@@ -1,4 +1,4 @@
-package blogengine.models.dto.blogdto;
+package blogengine.models.dto.blogdto.postdto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PostsInfo {
+public class PostsInfo<T> {
 
     long count;
-    List<PostDTO> posts;
+    List<T> posts;
 }

@@ -47,9 +47,13 @@ public class User{
     @Column(columnDefinition = "TEXT")
     private String photo;
 
-    @OneToMany(mappedBy = "user")
     @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Post> posts = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
+    private List<Post> postsForModeration = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private List<Vote> votes = new ArrayList<>();

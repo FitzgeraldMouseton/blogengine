@@ -70,7 +70,7 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     private Set<Tag> tags = new HashSet<>();
 
     public void addVote(Vote vote){
@@ -81,5 +81,15 @@ public class Post {
     public void addComment(Comment comment) {
         this.comments.add(comment);
         comment.setPost(this);
+    }
+
+    public void addTag(Tag tag){
+        this.tags.add(tag);
+        tag.getPosts().add(this);
+    }
+
+    public void addTags(Set<Tag> tags){
+        this.tags = tags;
+        tags.forEach(tag -> tag.getPosts().add(this));
     }
 }

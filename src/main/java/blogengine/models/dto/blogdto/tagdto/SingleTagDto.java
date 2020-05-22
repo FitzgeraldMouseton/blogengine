@@ -1,4 +1,4 @@
-package blogengine.models.dto.blogdto;
+package blogengine.models.dto.blogdto.tagdto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

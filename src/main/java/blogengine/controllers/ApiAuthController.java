@@ -3,6 +3,7 @@ package blogengine.controllers;
 import blogengine.exceptions.IncorrectCaptchaCodeException;
 import blogengine.exceptions.UserAlreadyExistsException;
 import blogengine.exceptions.UserNotFoundException;
+import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
 import blogengine.services.AuthService;
@@ -72,10 +73,10 @@ public class ApiAuthController {
     }
 
     @PostMapping("password")
-    public ResponseEntity setNewPassword(@PathVariable String code, @RequestBody SetPassRequest setPassDto){
+    public ResponseEntity setNewPassword(@RequestBody SetPassRequest setPassDto){
         HashMap<String, String> errors = new HashMap<>();
         try {
-            if (authService.setNewPassword(code, setPassDto)){
+            if (authService.setNewPassword(setPassDto)){
                 return ResponseEntity.ok().body(new SimpleResponseDto(true));
             }
         } catch (IllegalArgumentException ex) {

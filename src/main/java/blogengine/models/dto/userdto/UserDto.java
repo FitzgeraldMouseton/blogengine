@@ -3,7 +3,7 @@ package blogengine.models.dto.userdto;
 import lombok.Data;
 
 @Data
-public class UserDTO {
+public class UserDto {
 
     private int id;
     private String name;

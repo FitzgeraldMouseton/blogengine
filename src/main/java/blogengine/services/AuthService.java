@@ -10,6 +10,7 @@ import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
 import blogengine.util.SessionStorage;
 import blogengine.util.mail.EmailServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,33 +21,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.persistence.NoResultException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.time.Instant;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    private UserService userService;
-    private UserDtoMapper userDtoMapper;
-    private EmailServiceImpl emailService;
-    private CaptchaService captchaService;
-    private SessionStorage sessionStorage;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    private ThreadPoolTaskScheduler taskScheduler;
-
-    public AuthService(UserService userService, UserDtoMapper userDtoMapper, EmailServiceImpl emailService, CaptchaService captchaService, SessionStorage sessionStorage, BCryptPasswordEncoder bCryptPasswordEncoder, ThreadPoolTaskScheduler taskScheduler) {
-        this.userService = userService;
-        this.userDtoMapper = userDtoMapper;
-        this.emailService = emailService;
-        this.captchaService = captchaService;
-        this.sessionStorage = sessionStorage;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.taskScheduler = taskScheduler;
-    }
+    private final UserService userService;
+    private final UserDtoMapper userDtoMapper;
+    private final EmailServiceImpl emailService;
+    private final CaptchaService captchaService;
+    private final SessionStorage sessionStorage;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final ThreadPoolTaskScheduler taskScheduler;
 
     @Value("${captcha.expire.delay}")
     private Integer captchaExistenceTime;
@@ -119,23 +109,19 @@ public class AuthService {
         return new SimpleResponseDto(true);
     }
 
-    public boolean setNewPassword (String code, SetPassRequest dto) throws IllegalStateException, IllegalArgumentException {
+    public boolean setNewPassword (SetPassRequest request) throws IllegalStateException, IllegalArgumentException {
 
-        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (sessionStorage.getSessions().isEmpty()){
-            throw new UsernameNotFoundException("");
-        }
-        int userId = sessionStorage.getSessions().get(sessionId);
-        User user = userService.findById(userId);
-        if (!user.getCode().equals(code)){
+        User user = userService.findByCode(request.getCode());
+        if (user == null){
             throw new IllegalStateException("Ссылка для восстановления пароля устарела.<a href=\"/auth/restore\">Запросить ссылку снова</a>");
         }
-        CaptchaCode captchaCode = captchaService.findByCode(dto.getCaptcha());
+        CaptchaCode captchaCode = captchaService.findByCode(request.getCaptcha());
         if(captchaCode == null){
             throw new IllegalArgumentException("Код с картинки введён неверно");
         }
-        if (captchaCode.getSecretCode().equals(dto.getCaptchaSecret())) {
-            user.setPassword(dto.getPassword());
+        if (captchaCode.getSecretCode().equals(request.getCaptchaSecret())) {
+            user.setPassword(request.getPassword());
+            userService.save(user);
             return true;
         }
         return false;

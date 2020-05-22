@@ -1,12 +1,11 @@
 package blogengine.mappers;
 
 import blogengine.models.Comment;
-import blogengine.models.dto.blogdto.CommentDTO;
+import blogengine.models.dto.blogdto.commentdto.CommentDTO;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 
 @Data

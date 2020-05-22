@@ -1,71 +1,67 @@
 package blogengine.mappers;
 
-import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.Tag;
 import blogengine.models.Vote;
-import blogengine.models.dto.blogdto.AddPostRequest;
-import blogengine.models.dto.blogdto.PostDTO;
+import blogengine.models.dto.blogdto.postdto.AddPostRequest;
+import blogengine.models.dto.blogdto.postdto.PostDto;
+import blogengine.services.TagService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PostDtoMapper {
 
-    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
-    private UserDtoMapper userDtoMapper;
-    private CommentDtoMapper commentDtoMapper;
+    private DateTimeFormatter dateFormat;
+    private final UserDtoMapper userDtoMapper;
+    private final CommentDtoMapper commentDtoMapper;
+    private final TagService tagService;
 
-    @Autowired
-    public PostDtoMapper(UserDtoMapper userDtoMapper, CommentDtoMapper commentDtoMapper) {
-        this.userDtoMapper = userDtoMapper;
-        this.commentDtoMapper = commentDtoMapper;
-    }
-
-    public PostDTO postToPostDto(Post post){
-
-        PostDTO postDTO = new PostDTO();
+    public PostDto postToPostDto(Post post){
+        dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
+        PostDto postDto = new PostDto();
         Pair votes = getVoteCount(post);
-        postDTO.setId(post.getId());
-        postDTO.setTime(dateFormat.format(post.getTime()));
-        postDTO.setUser(userDtoMapper.userToUserDto(post.getUser()));
-        postDTO.setTitle(post.getTitle());
-        postDTO.setAnnounce(getAnnounce(post));
-        postDTO.setLikeCount(getLikesCount(votes));
-        postDTO.setDislikeCount(getDislikesCount(votes));
-        postDTO.setCommentCount(post.getComments().size());
-        postDTO.setViewCount(post.getViewCount());
-        return postDTO;
+        postDto.setId(post.getId());
+        postDto.setTime(dateFormat.format(post.getTime()));
+        postDto.setTitle(post.getTitle());
+        postDto.setAnnounce(getAnnounce(post));
+        postDto.setLikeCount(getLikesCount(votes));
+        postDto.setDislikeCount(getDislikesCount(votes));
+        postDto.setCommentCount(post.getComments().size());
+        postDto.setViewCount(post.getViewCount());
+        postDto.setUser(userDtoMapper.userToUserDto(post.getUser()));
+        return postDto;
     }
 
-    public PostDTO singlePostToPostDto(Post post){
-
-        PostDTO postDTO = postToPostDto(post);
+    public PostDto singlePostToPostDto(Post post){
+        PostDto postDTO = postToPostDto(post);
         postDTO.setText(post.getText());
         postDTO.setComments(post.getComments().stream()
-                .map(comment -> commentDtoMapper.commentToCommentDto(comment)).collect(Collectors.toList()));
+                .map(commentDtoMapper::commentToCommentDto).collect(Collectors.toList()));
         postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));
         return postDTO;
     }
 
-    public Post addPostRequestToPost(AddPostRequest request){
+    public void addPostRequestToPost(AddPostRequest request, Post post){
         dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        Post post = new Post();
         post.setTitle(request.getTitle());
         post.setText(request.getText());
-        post.setTime(LocalDateTime.parse(request.getTime(), dateFormat));
+        LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
+        post.setTime(requestTime);
         post.setActive(request.isActive());
-        post.setTags(request.getTags());
-        return post;
+        Set<Tag> tags = request.getTagNames().stream()
+                .map(tagName -> tagService.findTagByName(tagName).orElse(new Tag(tagName))).collect(Collectors.toSet());
+        post.addTags(tags);
     }
 
     private String getAnnounce(Post post){

@@ -1,38 +1,36 @@
 package blogengine.controllers;
 
-import blogengine.models.ModerationStatus;
-import blogengine.models.User;
-import blogengine.models.dto.SettingsDto;
+import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.BlogInfo;
-import blogengine.models.dto.blogdto.BlogStatisticsDto;
 import blogengine.models.dto.blogdto.CalendarDto;
-import blogengine.models.dto.blogdto.TagsResponse;
+import blogengine.models.dto.blogdto.StatisticsDto;
+import blogengine.models.dto.blogdto.commentdto.CommentRequest;
+import blogengine.models.dto.blogdto.tagdto.TagsResponse;
 import blogengine.models.dto.userdto.ChangeProfileRequest;
 import blogengine.services.GeneralService;
+import blogengine.services.PostService;
 import blogengine.services.TagService;
-import blogengine.services.UserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
-@AllArgsConstructor
 @RestController
 @RequestMapping("api")
+@RequiredArgsConstructor
 public class ApiGeneralController {
 
-    private TagService tagService;
-    private GeneralService generalService;
-    private UserService userService;
+    private final TagService tagService;
+    private final GeneralService generalService;
+    private final PostService postService;
 
     @GetMapping("/init")
     public BlogInfo getBlogInfo() {
@@ -45,15 +43,14 @@ public class ApiGeneralController {
         return tagService.findTagsByName(query);
     }
 
-    @GetMapping("statistics/all")
-    public BlogStatisticsDto getGeneralStatistics(){
-        return generalService.getBlogStatistics();
+    @GetMapping("statistics/my")
+    public StatisticsDto getUserStatistics(){
+        return generalService.getCurrentUserStatistics();
     }
 
-    //TODO заглушка, переделать, когда будет авторизация
-    @GetMapping("/settings")
-    public SettingsDto getSettings(){
-        return new SettingsDto();
+    @GetMapping("statistics/all")
+    public StatisticsDto getGeneralStatistics(){
+        return generalService.getBlogStatistics();
     }
 
     @GetMapping("calendar")
@@ -61,40 +58,35 @@ public class ApiGeneralController {
         return generalService.calendar(year);
     }
 
-    // ================================ Пока рано ======================================
-//    @PostMapping("image")
-//    public String uploadImage(@RequestParam MultipartFile image) throws IOException {
-//        String string = getPath("uploads/");
-//        byte[] bytes = image.getBytes();
-//        Path path = Path.of(string);
-//        Files.createDirectories(path);
-//        string += image.getOriginalFilename();
-//        path = Path.of(string);
-//        Files.write(path, bytes);
-//        return "/" + string;
-//    }
+    @PostMapping("comment")
+    public ResponseEntity addComment(@RequestBody CommentRequest commentRequest){
+        HashMap<String, String> errors = new HashMap<>();
+        try {
+            return ResponseEntity.ok().body(postService.addComment(commentRequest));
+        } catch (IllegalArgumentException ex) {
+            if (ex.getLocalizedMessage().equals("Текст комментария не задан или слишком короткий"))
+                errors.put("text", "Текст комментария не задан или слишком короткий");
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    }
 
-//    @PostMapping("profile/my")
-//    public SimpleResponseDto my(@RequestBody ChangeProfileRequest request) throws IOException {
-//        User user = userService.findById(2);
-//        MultipartFile image = request.getPhoto();
-//        byte[] bytes = image.getBytes();
-//        String string = "avatars";
-//        Path path = Path.of(string);
-//        Files.createDirectories(path);
-//        string += "/1.jpg";
-//        Files.write(path, bytes);
-//        user.setPhoto(string);
-//        return new SimpleResponseDto(true);
-//    }
+    @PostMapping("image")
+    public String uploadImage(@RequestParam MultipartFile image) throws IOException {
+        return generalService.uploadPostImage(image);
+    }
 
-//    private String getPath(String string){
-//        int length = 4;
-//        int parts = 3;
-//        StringBuilder builder = new StringBuilder(string);
-//        for (int i = 0; i < parts; i++) {
-//            builder.append(RandomStringUtils.randomAlphabetic(length).toLowerCase()).append("/");
-//        }
-//        return builder.toString();
-//    }
+    @PostMapping(value = "profile/my")
+    public SimpleResponseDto editProfile(@RequestBody ChangeProfileRequest request) throws IOException {
+        return generalService.editProfile(request);
+    }
+
+    @GetMapping("settings")
+    public Map<String, Boolean> getSettings(){
+        return generalService.getSettings();
+    }
+
+    @PutMapping("settings")
+    public void changeSettings(@RequestBody Map<String, Boolean> request){
+        generalService.changeSettings(request);
+    }
 }

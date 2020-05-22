@@ -3,7 +3,7 @@ package blogengine.mappers;
 import blogengine.models.User;
 import blogengine.models.dto.authdto.RegisterRequest;
 import blogengine.models.dto.authdto.UserLoginDto;
-import blogengine.models.dto.userdto.UserDTO;
+import blogengine.models.dto.userdto.UserDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 @Component
 public class UserDtoMapper {
 
-    public UserDTO userToUserDto(User user) {
+    public UserDto userToUserDto(User user) {
 
-        UserDTO userDTO = new UserDTO();
+        UserDto userDTO = new UserDto();
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
         userDTO.setPhoto(user.getPhoto());
