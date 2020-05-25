@@ -71,17 +71,13 @@ public class GeneralService {
         CalendarDto calendarDto = new CalendarDto();
         List<Post> posts = postService.getAllPots();
 
-        Map<String, Integer> postsPerDate = posts.stream().filter(post -> post.getTime().getYear() == year)
-                .collect(Collectors.groupingBy(p -> p.getTime().toLocalDate()))
-                .entrySet().stream()
-                .collect(Collectors.toMap(e -> dateFormat.format(e.getKey()), e -> e.getValue().size()))
-                .entrySet().stream().sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        final Map<String, Long> postsPerDate = posts.stream()
+                                                .filter(post -> post.getTime().getYear() == year)
+                                                .sorted(Comparator.comparing(Post::getTime).reversed())
+                                                .collect(Collectors.groupingBy(p -> dateFormat.format(p.getTime()), Collectors.counting()));
 
-        List<Integer> collect = posts.stream().map(post -> post.getTime().getYear()).distinct()
-                .sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        Integer[] years = new Integer[collect.size()];
-        years = collect.toArray(years);
+        final Integer[] years = posts.stream().map(post -> post.getTime().getYear()).distinct()
+                .sorted(Comparator.reverseOrder()).toArray(Integer[]::new);
 
         calendarDto.setPosts(postsPerDate);
         calendarDto.setYears(years);
@@ -116,8 +112,8 @@ public class GeneralService {
     public SimpleResponseDto editProfile(ChangeProfileRequest request) throws IOException {
 
         User user = userService.getCurrentUser();
-        //String photos = uploadUserAvatar(request.getPhoto());
-        //user.setPhoto(photos);
+        String photos = uploadUserAvatar(request.getPhoto());
+        user.setPhoto(photos);
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         String password = request.getPassword();
@@ -158,3 +154,24 @@ public class GeneralService {
         return builder.toString();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    Map<String, Integer> postsPerDate = posts.stream().filter(post -> post.getTime().getYear() == year)
+//            .collect(Collectors.groupingBy(p -> p.getTime().toLocalDate()))
+//            .entrySet().stream()
+//            .collect(Collectors.toMap(e -> dateFormat.format(e.getKey()), e -> e.getValue().size()))
+//            .entrySet().stream().sorted(Comparator.comparing(Map.Entry::getValue, Comparator.reverseOrder()))
+//            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));

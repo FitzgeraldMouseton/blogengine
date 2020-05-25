@@ -36,15 +36,15 @@ class PostServiceTest {
     @MockBean
     private PostDtoMapper postDtoMapper;
 
-    @Test
-    void findPostById() {
-        Post mockPost = new Post(1, true, ModerationStatus.ACCEPTED, new User(), new User(), LocalDateTime.now(),
-                "Хребты безумия", "Пугающие звуки шогготов", 15);
-        doReturn(Optional.of(mockPost)).when(postRepository).findById(1);
-
-        Post post = postService.findPostById(1);
-        Assertions.assertSame(mockPost, post);
-    }
+//    @Test
+//    void findPostById() {
+//        Post mockPost = new Post(1, true, ModerationStatus.ACCEPTED, new User(), new User(), LocalDateTime.now(),
+//                "Хребты безумия", "Пугающие звуки шогготов", 15);
+//        doReturn(Optional.of(mockPost)).when(postRepository).findById(1);
+//
+//        Post post = postService.findPostById(1);
+//        Assertions.assertSame(mockPost, post);
+//    }
 
     @Test
     void getAllPots() {

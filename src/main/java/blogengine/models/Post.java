@@ -16,18 +16,6 @@ import java.util.*;
 @Table(name = "posts")
 public class Post {
 
-    public Post(@NotNull int id, @NotNull boolean active, @NotNull ModerationStatus moderationStatus, @NotNull User user, @NotNull User moderator, @NotNull LocalDateTime time, @NotNull String title, @NotNull String text, @NotNull int viewCount) {
-        this.id = id;
-        this.active = active;
-        this.moderationStatus = moderationStatus;
-        this.user = user;
-        this.moderator = moderator;
-        this.time = time;
-        this.title = title;
-        this.text = text;
-        this.viewCount = viewCount;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.PRIVATE)
