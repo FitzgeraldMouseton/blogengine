@@ -17,8 +17,8 @@ public class VoteService {
 
     private final VoteRepository voteRepository;
 
-    private final static byte LIKE = 1;
-    private final static byte DISLIKE = -1;
+    private static final byte LIKE = 1;
+    private static final byte DISLIKE = -1;
 
     public void save(Vote vote){
         voteRepository.save(vote);
@@ -46,11 +46,13 @@ public class VoteService {
 
     void setLike(Post post, User user){
         Vote like =  createVote(post, user, LIKE);
+        log.info(like.toString());
         voteRepository.save(like);
     }
 
     void setDislike(Post post, User user){
         Vote dislike = createVote(post, user, DISLIKE);
+        log.info(dislike.toString());
         voteRepository.save(dislike);
     }
 
@@ -61,7 +63,7 @@ public class VoteService {
     }
 
     void deleteDislikeIfExists(Post post, User user){
-        Vote dislike = findLike(post, user);
+        Vote dislike = findDislike(post, user);
         if (dislike != null)
             voteRepository.delete(dislike);
     }

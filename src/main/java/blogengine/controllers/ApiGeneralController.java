@@ -59,7 +59,7 @@ public class ApiGeneralController {
     }
 
     @PostMapping("comment")
-    public ResponseEntity addComment(@RequestBody CommentRequest commentRequest){
+    public ResponseEntity<?> addComment(@RequestBody CommentRequest commentRequest){
         HashMap<String, String> errors = new HashMap<>();
         try {
             return ResponseEntity.ok().body(postService.addComment(commentRequest));

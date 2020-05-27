@@ -120,7 +120,8 @@ public class AuthService {
             throw new IllegalArgumentException("Код с картинки введён неверно");
         }
         if (captchaCode.getSecretCode().equals(request.getCaptchaSecret())) {
-            user.setPassword(request.getPassword());
+            user.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
+            user.setCode("");
             userService.save(user);
             return true;
         }

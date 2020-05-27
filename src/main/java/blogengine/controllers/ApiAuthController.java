@@ -30,12 +30,17 @@ public class ApiAuthController {
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         HashMap<String, String> errors = new HashMap<>();
+        AuthenticationResponse response;
         try {
-            return ResponseEntity.ok().body(authService.login(loginRequest));
+            response = authService.login(loginRequest);
         } catch (UserNotFoundException ex) {
             errors.put("message", ex.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
         }
+        if (response == null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SimpleResponseDto(false));
+        else
+            return ResponseEntity.ok(response);
     }
 
     @PostMapping("register")
