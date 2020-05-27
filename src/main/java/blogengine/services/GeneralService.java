@@ -7,7 +7,6 @@ import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.StatisticsDto;
 import blogengine.models.dto.userdto.ChangeProfileRequest;
-import blogengine.repositories.GlobalSettingsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -29,7 +28,11 @@ public class GeneralService {
     private final PostService postService;
     private final UserService userService;
     private final VoteService voteService;
-    private final GlobalSettingsRepository globalSettingsRepository;
+    private final SettingService settingService;
+
+    private Map<String, String> settingsData = Map.of("MULTIUSER_MODE", "Многопользовательский режим",
+                                                        "POST_PREMODERATION", "Премодерация постов",
+                                                        "STATISTICS_IS_PUBLIC", "Показывать всем статистику блога");
 
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final String POST_IMAGE_LOCATION = "uploads/";
@@ -85,26 +88,29 @@ public class GeneralService {
     }
 
     public Map<String, Boolean> getSettings(){
-        User currentUser = userService.getCurrentUser();
-        if (!currentUser.isModerator())
-            return null;
-        Iterable<GlobalSetting> settings = globalSettingsRepository.findAll();
         Map<String, Boolean> response = new HashMap<>();
-        settings.forEach(setting -> response.put(setting.getName(), setting.getValue()));
+        User currentUser = userService.getCurrentUser();
+        if (currentUser != null && currentUser.isModerator()){
+            List<GlobalSetting> settings = settingService.getSettings();
+            if (settings.isEmpty()){
+                settingService.fillSettings();
+            }
+            settings.forEach(setting -> response.put(setting.getName(), setting.getValue()));
+        }
         return response;
     }
 
     public void changeSettings(Map<String, Boolean> request){
-        User user = userService.getCurrentUser();
-        if (user.isModerator()){
-            log.info("trig");
-            Iterable<GlobalSetting> settings = globalSettingsRepository.findAll();
-            settings.forEach(setting -> {
-                Boolean value = request.get(setting.getCode());
-                if (value != null){
-                    setting.setValue(value);
-                    globalSettingsRepository.save(setting);
+        User currentUser = userService.getCurrentUser();
+        if (currentUser != null && currentUser.isModerator()){
+            request.keySet().forEach(k -> {
+                GlobalSetting setting = settingService.getSettingByCode(k);
+                if (setting == null){
+                    setting = new GlobalSetting(k, settingsData.get(k), request.get(k));
+                } else {
+                    setting.setValue(request.get(k));
                 }
+                settingService.save(setting);
             });
         }
     }

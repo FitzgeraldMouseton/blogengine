@@ -224,7 +224,7 @@ Insert into posts_tags(posts_id, tags_id) values
 (19, 6),
 (20, 5);
 
-Insert into global_settings(id, code, name, value) values
-(1, 'MULTIUSER_MODE', 'Многопользовательский режим', 0),
-(2, 'POST_PREMODERATION', 'Премодерация постов', 0),
-(3, 'STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога', 0);
+--Insert into global_settings(id, code, name, value) values
+--(1, 'MULTIUSER_MODE', 'Многопользовательский режим', 0),
+--(2, 'POST_PREMODERATION', 'Премодерация постов', 0),
+--(3, 'STATISTICS_IS_PUBLIC', 'Показывать всем статистику блога', 0);

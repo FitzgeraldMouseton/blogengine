@@ -209,13 +209,13 @@ public class PostService {
     public CommentResponse addComment(CommentRequest request){
         if (request.getText().isEmpty() || request.getText().length() < COMMENT_MIN_LENGTH)
             throw new IllegalArgumentException("Текст комментария не задан или слишком короткий");
-        if (request.getParentId() == null || request.getPostId() == null)
-            throw new IllegalArgumentException("Неверный параметр");
         Comment comment = new Comment();
         Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
         comment.setPost(post);
-        Comment parent = commentService.findById(Integer.parseInt(request.getParentId()));
-        comment.setComment(parent);
+        if (request.getParentId() != null && !request.getParentId().isEmpty()){
+            Comment parent = commentService.findById(Integer.parseInt(request.getParentId()));
+            comment.setComment(parent);
+        }
         comment.setText(request.getText());
         comment.setUser(userService.getCurrentUser());
         comment.setTime(LocalDateTime.now());

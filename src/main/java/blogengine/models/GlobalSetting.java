@@ -25,4 +25,13 @@ public class GlobalSetting {
 
     @NotNull
     private Boolean value;
+
+    public GlobalSetting() {
+    }
+
+    public GlobalSetting(@NotNull String code, @NotNull String name, @NotNull Boolean value) {
+        this.code = code;
+        this.name = name;
+        this.value = value;
+    }
 }

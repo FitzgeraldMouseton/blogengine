@@ -59,7 +59,7 @@ public class ApiPostController {
     }
 
     @PostMapping
-    public ResponseEntity addPost(@RequestBody AddPostRequest request){
+    public ResponseEntity<?> addPost(@RequestBody AddPostRequest request){
         HashMap<String, String> errors = new HashMap<>();
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(postService.addPost(request));
@@ -74,7 +74,7 @@ public class ApiPostController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity editPost(@PathVariable int id, @RequestBody AddPostRequest request){
+    public ResponseEntity<?> editPost(@PathVariable int id, @RequestBody AddPostRequest request){
         log.info("trig");
         HashMap<String, String> errors = new HashMap<>();
         try {
@@ -91,6 +91,7 @@ public class ApiPostController {
 
     @PostMapping("like")
     public SimpleResponseDto addLike(@RequestBody VoteRequest request){
+        log.info("like c");
         return postService.likePost(request);
     }
 
