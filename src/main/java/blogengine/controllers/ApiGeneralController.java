@@ -4,6 +4,7 @@ import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.BlogInfo;
 import blogengine.models.dto.blogdto.CalendarDto;
+import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
 import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.tagdto.TagsResponse;
@@ -36,6 +37,11 @@ public class ApiGeneralController {
     public BlogInfo getBlogInfo() {
 
         return new BlogInfo();
+    }
+
+    @PostMapping("moderation")
+    public void moderation(@RequestBody ModerationRequest request){
+        generalService.moderation(request);
     }
 
     @GetMapping("/tag")

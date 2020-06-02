@@ -1,10 +1,12 @@
 package blogengine.services;
 
 import blogengine.models.GlobalSetting;
+import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.User;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
+import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
 import blogengine.models.dto.userdto.ChangeProfileRequest;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,16 @@ public class GeneralService {
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final String POST_IMAGE_LOCATION = "uploads/";
     private static final String USER_AVATAR_LOCATION = "avatars/";
+
+    public void moderation(ModerationRequest request){
+        Post post = postService.findPostById(request.getPostId());
+        if ("decline".equals(request.getDecision())) {
+            post.setModerationStatus(ModerationStatus.DECLINE);
+        } else if ("accept".equals(request.getDecision())) {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+            postService.save(post);
+        }
+    }
 
     public StatisticsDto getCurrentUserStatistics(){
 

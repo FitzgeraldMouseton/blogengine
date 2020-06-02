@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
@@ -9,7 +9,7 @@ spring:
     url: jdbc:mysql://localhost:3306/blog_engine?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root
     password: password
-    initialization-mode: always
+    initialization-mode: never
   mail:
     host: smtp.yandex.ru
     username: email@yandex.ru

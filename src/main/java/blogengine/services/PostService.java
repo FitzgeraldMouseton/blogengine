@@ -37,12 +37,14 @@ public class PostService {
     private final CommentService commentService;
     private final VoteService voteService;
 
-    private final static short TITLE_MIN_LENGTH = 10;
-    private final static short TEXT_MIN_LENGTH = 100;
-    private final static short COMMENT_MIN_LENGTH = 5;
+    private static final short TITLE_MIN_LENGTH = 10;
+    private static final short TEXT_MIN_LENGTH = 100;
+    private static final short COMMENT_MIN_LENGTH = 5;
 
     public Post findPostById(Integer id){
-        return postRepository.findById(id).orElse(null);
+        Post post =  postRepository.findById(id).orElse(null);
+        post.setTitle("jk");
+        return post;
     }
 
     public List<Post> getAllPots(){
@@ -83,10 +85,9 @@ public class PostService {
             case "best":
                 posts = postRepository.findBestPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
                 break;
+            default:
+                throw new IllegalArgumentException("Wrong argument 'mode': " + mode);
         }
-
-        if (posts == null)
-            throw new IllegalArgumentException("Wrong argument 'mode': " + mode);
 
         List<PostDto> postDtos = getPostDTOs(posts);
         return new PostsInfo<>(postsCount, postDtos);
@@ -110,10 +111,9 @@ public class PostService {
             case "published":
                 posts = postRepository.getCurrentUserActivePosts(user, ModerationStatus.ACCEPTED, pageable);
                 break;
+            default:
+                throw new IllegalArgumentException("Wrong argument 'status': " + status);
         }
-
-        if (posts == null)
-            throw new IllegalArgumentException("Wrong argument 'status': " + status);
 
         List<PostDto> postDtos = getPostDTOs(posts);
         return new PostsInfo<>(postsCount, postDtos);
@@ -150,27 +150,30 @@ public class PostService {
     }
 
     public PostsInfo<PostDto> postsForModeration(int offset, int limit, String status){
-        User moderator = userService.getCurrentUser();
-        long count = postRepository.countAllByModeratorAndActiveTrue(moderator);
-        List<Post> posts = null;
-        Pageable pageable = PageRequest.of(offset/limit, limit);
-        switch (status) {
-            case "new":
-                posts = postRepository.getPostsForModeration(moderator, ModerationStatus.NEW, pageable);
-                break;
-            case "declined":
-                posts = postRepository.getPostsForModeration(moderator, ModerationStatus.DECLINE, pageable);
-                break;
-            case "accepted":
-                posts = postRepository.getPostsForModeration(moderator, ModerationStatus.ACCEPTED, pageable);
-                break;
+        User user = userService.getCurrentUser();
+        if(user.isModerator()){
+            log.info("trig");
+            long count = postRepository.countAllByModeratorAndActiveTrue(user);
+            List<Post> posts = null;
+            Pageable pageable = PageRequest.of(offset/limit, limit);
+            switch (status) {
+                case "new":
+                    posts = postRepository.getPostsForModeration(user, ModerationStatus.NEW, pageable);
+                    break;
+                case "declined":
+                    posts = postRepository.getPostsForModeration(user, ModerationStatus.DECLINE, pageable);
+                    break;
+                case "accepted":
+                    posts = postRepository.getPostsForModeration(user, ModerationStatus.ACCEPTED, pageable);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Wrong argument 'status': " + status);
+            }
+
+            List<PostDto> postDtos = getPostDTOs(posts);
+            return new PostsInfo<>(count, postDtos);
         }
-
-        if (posts == null)
-            throw new IllegalArgumentException("Wrong argument 'status': " + status);
-
-        List<PostDto> postDtos = getPostDTOs(posts);
-        return new PostsInfo<>(count, postDtos);
+        return null;
     }
 
     public SimpleResponseDto addPost(AddPostRequest request){

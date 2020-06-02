@@ -29,7 +29,7 @@ public class UserDtoMapper {
         loginDto.setName(user.getName());
         loginDto.setPhoto(user.getPhoto());
         loginDto.setEmail(user.getEmail());
-        loginDto.setModeration(false);
+        loginDto.setModeration(user.isModerator());
         loginDto.setModerationCount(0);
         loginDto.setSettings(true);
         return loginDto;

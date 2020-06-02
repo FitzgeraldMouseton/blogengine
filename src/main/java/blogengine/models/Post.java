@@ -9,10 +9,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Getter
-@Setter
+@Data
 @Entity
 @NoArgsConstructor(force = true)
+@AllArgsConstructor
 @Table(name = "posts")
 public class Post {
 
@@ -79,5 +79,50 @@ public class Post {
     public void addTags(Set<Tag> tags){
         this.tags = tags;
         tags.forEach(tag -> tag.getPosts().add(this));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Post post = (Post) o;
+
+        if (id != post.id) return false;
+        if (active != post.active) return false;
+        if (viewCount != post.viewCount) return false;
+        if (moderationStatus != post.moderationStatus) return false;
+        if (!user.equals(post.user)) return false;
+        if (!time.equals(post.time)) return false;
+        if (!title.equals(post.title)) return false;
+        return text.equals(post.text);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + (active ? 1 : 0);
+        result = 31 * result + moderationStatus.hashCode();
+        result = 31 * result + user.hashCode();
+        result = 31 * result + time.hashCode();
+        result = 31 * result + title.hashCode();
+        result = 31 * result + text.hashCode();
+        result = 31 * result + viewCount;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Post{" +
+                "id=" + id +
+                ", active=" + active +
+                ", moderationStatus=" + moderationStatus +
+                ", user=" + user +
+                ", moderator=" + moderator +
+                ", time=" + time +
+                ", title='" + title + '\'' +
+                ", text='" + text + '\'' +
+                ", viewCount=" + viewCount +
+                '}';
     }
 }

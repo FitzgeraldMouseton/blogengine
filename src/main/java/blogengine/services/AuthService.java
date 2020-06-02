@@ -83,7 +83,7 @@ public class AuthService {
 
     public AuthenticationResponse check() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (!(sessionStorage.getSessions().size() == 0)){
+        if (sessionStorage.getSessions().size() != 0){
             int userId = sessionStorage.getSessions().get(sessionId);
             User user = userService.findById(userId);
             UserLoginDto userDTO = userDtoMapper.userToLoginDto(user);
