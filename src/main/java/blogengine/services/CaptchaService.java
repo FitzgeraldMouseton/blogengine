@@ -13,7 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -24,12 +24,13 @@ public class CaptchaService {
     public CaptchaCode findBySecretCode(String code){
         return captchaRepository.findBySecretCode(code).orElse(null);
     }
-    public CaptchaCode findByCode(String code){
-        return captchaRepository.findByCode(code).orElse(null);
-    }
 
     public void save(CaptchaCode captchaCode){
         captchaRepository.save(captchaCode);
+    }
+
+    public void delete(CaptchaCode captchaCode) {
+        captchaRepository.delete(captchaCode);
     }
 
     @Transactional
@@ -55,7 +56,7 @@ public class CaptchaService {
             e.printStackTrace();
         }
 
-        CaptchaCode captchaCode = new CaptchaCode(code, secretCode, new Date());
+        CaptchaCode captchaCode = new CaptchaCode(code, secretCode, LocalDateTime.now());
         captchaRepository.save(captchaCode);
         return captchaDto;
     }

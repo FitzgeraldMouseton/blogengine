@@ -1,10 +1,13 @@
 package blogengine.models;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -12,7 +15,7 @@ import java.util.Date;
 @Table(name = "captcha_codes")
 public class CaptchaCode {
 
-    public CaptchaCode(@NotNull String code, @NotNull String secretCode, @NotNull Date time) {
+    public CaptchaCode(@NotNull String code, @NotNull String secretCode, @NotNull LocalDateTime time) {
         this.code = code;
         this.secretCode = secretCode;
         this.time = time;
@@ -30,6 +33,5 @@ public class CaptchaCode {
     private String secretCode;
 
     @NotNull
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date time;
+    private LocalDateTime time;
 }

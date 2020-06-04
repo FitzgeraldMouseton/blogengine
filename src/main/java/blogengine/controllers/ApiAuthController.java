@@ -52,7 +52,7 @@ public class ApiAuthController {
 
     @PostMapping("password")
     public ResponseEntity<SimpleResponseDto> setNewPassword(@RequestBody SetPassRequest setPassDto){
-        return ResponseEntity.ok().body(new SimpleResponseDto(true));
+        return ResponseEntity.ok().body(authService.setNewPassword(setPassDto));
     }
 
     @GetMapping("logout")

@@ -1,7 +1,5 @@
 package blogengine.services;
 
-import blogengine.exceptions.blogexceptions.IncorrectTextException;
-import blogengine.exceptions.blogexceptions.IncorrectTitleException;
 import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
@@ -14,6 +12,7 @@ import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.dto.blogdto.postdto.PostsInfo;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
+import blogengine.util.RequestChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -39,17 +37,17 @@ public class PostService {
     private final UserService userService;
     private final CommentService commentService;
     private final VoteService voteService;
+    private final RequestChecker requestChecker;
 
-    private static final short TITLE_MIN_LENGTH = 10;
-    private static final short TEXT_MIN_LENGTH = 100;
     private static final short COMMENT_MIN_LENGTH = 5;
 
-    public Post findPostById(Integer id){
-        Post post =  postRepository.findById(id).orElse(null);
-        return post;
+    //================================= Methods for working with repository =======================
+
+    Post findPostById(Integer id){
+        return postRepository.findById(id).orElse(null);
     }
 
-    public List<Post> getAllPots(){
+    List<Post> getAllPots(){
         return postRepository.findAllBy();
     }
 
@@ -57,21 +55,23 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public Long countUserPosts(User user){
+    Long countUserPosts(User user){
         return postRepository.countAllByUser(user);
     }
 
-    public Long countUserPostsViews(User user){
+    Long countUserPostsViews(User user){
         return postRepository.countUserPostsViews(user);
     }
 
-    public Post findFirstPost(){
+    Post findFirstPost(){
         return postRepository.findFirstByOrderByTime().orElse(null);
     }
 
+    //================================= Main logic methods ==========================================
+
     public PostsInfo<PostDto> findPosts(int offset, int limit, String mode) {
 
-        List<Post> posts = null;
+        List<Post> posts;
         long postsCount = postRepository.countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now());
         Pageable pageable = PageRequest.of(offset/limit, limit);
         switch (mode) {
@@ -97,7 +97,7 @@ public class PostService {
 
     public PostsInfo<PostDto> findCurrentUserPosts(int offset, int limit, String status){
         User user = userService.getCurrentUser();
-        List<Post> posts = null;
+        List<Post> posts;
         long postsCount = postRepository.countAllByUser(user);
         Pageable pageable = PageRequest.of(offset/limit, limit);
         switch (status) {
@@ -119,36 +119,6 @@ public class PostService {
 
         List<PostDto> postDtos = getPostDTOs(posts);
         return new PostsInfo<>(postsCount, postDtos);
-    }
-
-    public PostsInfo<PostDto> findAllByQuery(int offset, int limit, String query){
-
-        Pageable pageable = PageRequest.of(offset/limit, limit);
-        List<Post> posts = postRepository.findPostsByQuery(ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
-        List<PostDto> postDtos = getPostDTOs(posts);
-        return new PostsInfo<>(posts.size(), postDtos);
-    }
-
-    public PostDto findValidPostById(int id) throws UserNotFoundException {
-        Optional<Post> postOptional = postRepository.getValidPostById(id, ModerationStatus.ACCEPTED, LocalDateTime.now());
-        if (postOptional.isEmpty())
-            throw new UserNotFoundException(String.format("Пост с id = %d не найден", id));
-        Post post = postOptional.get();
-        post.setViewCount(post.getViewCount() + 1);
-        postRepository.save(post);
-        return postDtoMapper.singlePostToPostDto(post);
-    }
-
-    public PostsInfo<PostDto> findPostsByDate(int offset, int limit, LocalDate date) {
-        Pageable pageable = PageRequest.of(offset/limit, limit);
-        List<Post> posts = postRepository.findPostsByDate(ModerationStatus.ACCEPTED, date.atStartOfDay(), date.atStartOfDay().plusDays(1), pageable);
-        return new PostsInfo<>(posts.size(), getPostDTOs(posts));
-    }
-
-    public PostsInfo<PostDto> findPostsByTag(int offset, int limit, String tag) {
-        Pageable pageable = PageRequest.of(offset/limit, limit);
-        List<Post> posts = postRepository.findAllByTag(ModerationStatus.ACCEPTED, LocalDateTime.now(), tag, pageable);
-        return new PostsInfo<>(posts.size(), getPostDTOs(posts));
     }
 
     public PostsInfo<ModerationResponse> postsForModeration(int offset, int limit, String status){
@@ -177,12 +147,42 @@ public class PostService {
         return null;
     }
 
+    public PostsInfo<PostDto> findAllByQuery(int offset, int limit, String query){
+
+        Pageable pageable = PageRequest.of(offset/limit, limit);
+        List<Post> posts = postRepository.findPostsByQuery(ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
+        List<PostDto> postDtos = getPostDTOs(posts);
+        return new PostsInfo<>(posts.size(), postDtos);
+    }
+
+    public PostDto findValidPostById(int id) {
+        Optional<Post> postOptional = postRepository.getValidPostById(id, ModerationStatus.ACCEPTED, LocalDateTime.now());
+        if (postOptional.isEmpty())
+            throw new UserNotFoundException(String.format("Пост с id = %d не найден", id));
+        Post post = postOptional.get();
+        post.setViewCount(post.getViewCount() + 1);
+        postRepository.save(post);
+        return postDtoMapper.singlePostToPostDto(post);
+    }
+
+    public PostsInfo<PostDto> findPostsByDate(int offset, int limit, LocalDate date) {
+        Pageable pageable = PageRequest.of(offset/limit, limit);
+        List<Post> posts = postRepository.findPostsByDate(ModerationStatus.ACCEPTED, date.atStartOfDay(), date.atStartOfDay().plusDays(1), pageable);
+        return new PostsInfo<>(posts.size(), getPostDTOs(posts));
+    }
+
+    public PostsInfo<PostDto> findPostsByTag(int offset, int limit, String tag) {
+        Pageable pageable = PageRequest.of(offset/limit, limit);
+        List<Post> posts = postRepository.findAllByTag(ModerationStatus.ACCEPTED, LocalDateTime.now(), tag, pageable);
+        return new PostsInfo<>(posts.size(), getPostDTOs(posts));
+    }
+
     public SimpleResponseDto addPost(AddPostRequest request){
         User user = userService.getCurrentUser();
         User moderator = userService.getModerator();
         Post post = new Post();
         postDtoMapper.addPostRequestToPost(request, post);
-        checkPostParameters(post.getTitle(), post.getText(), post.getTime());
+        requestChecker.checkPostParameters(post.getTitle(), post.getText(), post.getTime());
         post.setModerationStatus(ModerationStatus.NEW);
         post.setUser(user);
         post.setModerator(moderator);
@@ -198,7 +198,7 @@ public class PostService {
         }
         Post post = postOptional.get();
         postDtoMapper.addPostRequestToPost(request, post);
-        checkPostParameters(post.getTitle(), post.getText(), post.getTime());
+        requestChecker.checkPostParameters(post.getTitle(), post.getText(), post.getTime());
 //        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 //        if (post.getTime().isBefore(currentTime)){
 //            post.setTime(currentTime);
@@ -211,8 +211,7 @@ public class PostService {
     }
 
     public CommentResponse addComment(CommentRequest request){
-        if (request.getText().isEmpty() || request.getText().length() < COMMENT_MIN_LENGTH)
-            throw new IncorrectTextException("Текст комментария не задан или слишком короткий");
+        requestChecker.checkCommentRequest(request);
         Comment comment = new Comment();
         Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
         comment.setPost(post);
@@ -253,6 +252,8 @@ public class PostService {
         return new SimpleResponseDto(true);
     }
 
+    //================================= Additional methods ==========================================
+
     private List<PostDto> getPostDTOs(Iterable<Post> posts){
         List<PostDto> postDtos = new ArrayList<>();
         posts.forEach(post -> {
@@ -269,18 +270,5 @@ public class PostService {
             postDtos.add(postDTO);
         });
         return postDtos;
-    }
-
-    private void checkPostParameters(String title, String text, LocalDateTime time){
-        if (title == null || title.length() < TITLE_MIN_LENGTH) {
-            throw new IncorrectTitleException("Заголовок не установлен");
-        }
-        if (text == null || text.length() < TEXT_MIN_LENGTH) {
-            throw new IncorrectTextException("Текст публикации слишком короткий");
-        }
-        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        if (time.isBefore(currentTime)){
-            throw new IllegalArgumentException("Неправильная дата");
-        }
     }
 }

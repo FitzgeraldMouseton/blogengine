@@ -21,7 +21,6 @@ public class CommentDtoMapper {
     }
 
     public CommentDTO commentToCommentDto(Comment comment){
-
         CommentDTO commentDTO = new CommentDTO();
         commentDTO.setId(comment.getId());
         commentDTO.setTime(dateFormat.format(comment.getTime()));

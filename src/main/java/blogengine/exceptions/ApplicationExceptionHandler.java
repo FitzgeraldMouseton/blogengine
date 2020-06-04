@@ -16,9 +16,7 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler({RootApplicationException.class})
     public final ResponseEntity<ErrorResponse> handleExceptionText(RootApplicationException ex){
         HashMap<String, String> errors = new HashMap<>();
-
         errors.put(ex.getSourceOfException(), ex.getMessage());
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
     }
 }

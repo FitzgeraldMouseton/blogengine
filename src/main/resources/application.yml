@@ -21,9 +21,44 @@ spring:
     multipart:
       max-file-size: 5MB
       enabled: false
-captcha:
-  expiration:
-    time: 3600
+
+
+#========================= App variables ============================
+
 restorecode:
   expiration:
     time: 3600
+captcha:
+  expiration:
+    time: 3600
+
+settings: "{
+  MULTIUSER_MODE: 'Многопользовательский режим',
+  POST_PREMODERATION: 'Премодерация постов',
+  STATISTICS_IS_PUBLIC: 'Показывать всем статистику блога'
+}"
+
+textconstraints:
+  minlength: 100
+  mintitle: 7
+  mincomment: 5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#errormessages:
+#  captcha: 'Код с картинки введён неверно'
+#  name: 'Имя указано неверно'
+#  user:
+#    notfound: 'Не найден пользователь с таким адресом почты'
+#    exists: 'Этот e-mail уже зарегистрирован'
