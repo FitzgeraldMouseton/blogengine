@@ -123,17 +123,19 @@ public class GeneralService {
         }
     }
 
-    public SimpleResponseDto editProfile(ChangeProfileRequest request) throws IOException {
+    public SimpleResponseDto editProfileWithPhoto(MultipartFile file, ChangeProfileRequest request) throws IOException {
+        User user = userService.getCurrentUser();
+        String photo = uploadUserAvatar(file);
+        user.setPhoto(photo);
+        editProfile(user, request);
+        userService.save(user);
+        return new SimpleResponseDto(true);
+    }
+
+    public SimpleResponseDto editProfileWithoutPhoto(ChangeProfileRequest request) {
 
         User user = userService.getCurrentUser();
-        String photos = uploadUserAvatar(request.getPhoto());
-        user.setPhoto(photos);
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        String password = request.getPassword();
-        if (!password.isEmpty() && password.length() > 5){
-            user.setPassword(request.getPassword());
-        }
+        editProfile(user, request);
         userService.save(user);
         return new SimpleResponseDto(true);
     }
@@ -143,19 +145,19 @@ public class GeneralService {
     }
 
     private String uploadUserAvatar(MultipartFile image) throws IOException {
-        return uploadImage(image, POST_IMAGE_LOCATION);
+        return uploadImage(image, USER_AVATAR_LOCATION);
     }
 
     private String uploadImage(MultipartFile image, String imageLocation) throws IOException {
-        imageLocation = getPath(imageLocation);
+        imageLocation = getPathForUpload(imageLocation);
         byte[] bytes = image.getBytes();
         imageLocation += image.getOriginalFilename();
         Path path = Path.of(imageLocation);
         Files.write(path, bytes);
-        return imageLocation;
+        return "/" + imageLocation;
     }
 
-    private String getPath(String string) throws IOException {
+    private String getPathForUpload(String string) throws IOException {
         int length = 4;
         int parts = 3;
         StringBuilder builder = new StringBuilder(string);
@@ -166,6 +168,15 @@ public class GeneralService {
         Path path = Path.of(builder.toString());
         Files.createDirectories(path);
         return builder.toString();
+    }
+
+    private void editProfile(User user, ChangeProfileRequest request){
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        String password = request.getPassword();
+        if (password != null && password.length() > 5){
+            user.setPassword(request.getPassword());
+        }
     }
 }
 

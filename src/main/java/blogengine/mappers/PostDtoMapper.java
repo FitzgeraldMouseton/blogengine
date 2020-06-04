@@ -3,6 +3,7 @@ package blogengine.mappers;
 import blogengine.models.Post;
 import blogengine.models.Tag;
 import blogengine.models.Vote;
+import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.services.TagService;
@@ -30,7 +31,7 @@ public class PostDtoMapper {
     public PostDto postToPostDto(Post post){
         dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
         PostDto postDto = new PostDto();
-        Pair votes = getVoteCount(post);
+        Pair<Integer, Integer> votes = getVoteCount(post);
         postDto.setId(post.getId());
         postDto.setTime(dateFormat.format(post.getTime()));
         postDto.setTitle(post.getTitle());
@@ -64,6 +65,17 @@ public class PostDtoMapper {
         post.addTags(tags);
     }
 
+    public ModerationResponse postToModerationResponse(Post post){
+        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        ModerationResponse response = new ModerationResponse();
+        response.setId(post.getId());
+        response.setTime(dateFormat.format(post.getTime()));
+        response.setUser(userDtoMapper.userToUserDto(post.getUser()));
+        response.setTitle(post.getTitle());
+        response.setAnnounce(getAnnounce(post));
+        return response;
+    }
+
     private String getAnnounce(Post post){
         String announce = Jsoup.parse(post.getText()).text();
         announce = (announce.length() > 400) ? announce.substring(0, 400) : announce;
@@ -71,7 +83,7 @@ public class PostDtoMapper {
         return announce;
     }
 
-    private Pair getVoteCount(Post post){
+    private Pair<Integer, Integer> getVoteCount(Post post){
         int likesCount = 0;
         int dislikeCount = 0;
         for (Vote vote: post.getVotes()){
@@ -83,11 +95,11 @@ public class PostDtoMapper {
         return Pair.of(likesCount, dislikeCount);
     }
 
-    private int getLikesCount(Pair votes){
-        return (int) votes.getFirst();
+    private int getLikesCount(Pair<Integer, Integer> votes){
+        return votes.getFirst();
     }
 
-    private int getDislikesCount(Pair votes){
-        return (int) votes.getSecond();
+    private int getDislikesCount(Pair<Integer, Integer> votes){
+        return votes.getSecond();
     }
 }

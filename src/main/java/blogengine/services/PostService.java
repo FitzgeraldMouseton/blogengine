@@ -1,9 +1,12 @@
 package blogengine.services;
 
-import blogengine.exceptions.UserNotFoundException;
+import blogengine.exceptions.blogexceptions.IncorrectTextException;
+import blogengine.exceptions.blogexceptions.IncorrectTitleException;
+import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
+import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
@@ -43,7 +46,6 @@ public class PostService {
 
     public Post findPostById(Integer id){
         Post post =  postRepository.findById(id).orElse(null);
-        post.setTitle("jk");
         return post;
     }
 
@@ -149,12 +151,12 @@ public class PostService {
         return new PostsInfo<>(posts.size(), getPostDTOs(posts));
     }
 
-    public PostsInfo<PostDto> postsForModeration(int offset, int limit, String status){
+    public PostsInfo<ModerationResponse> postsForModeration(int offset, int limit, String status){
         User user = userService.getCurrentUser();
         if(user.isModerator()){
             log.info("trig");
             long count = postRepository.countAllByModeratorAndActiveTrue(user);
-            List<Post> posts = null;
+            List<Post> posts;
             Pageable pageable = PageRequest.of(offset/limit, limit);
             switch (status) {
                 case "new":
@@ -169,8 +171,7 @@ public class PostService {
                 default:
                     throw new IllegalArgumentException("Wrong argument 'status': " + status);
             }
-
-            List<PostDto> postDtos = getPostDTOs(posts);
+            List<ModerationResponse> postDtos = getModerationPostDTOs(posts);
             return new PostsInfo<>(count, postDtos);
         }
         return null;
@@ -211,7 +212,7 @@ public class PostService {
 
     public CommentResponse addComment(CommentRequest request){
         if (request.getText().isEmpty() || request.getText().length() < COMMENT_MIN_LENGTH)
-            throw new IllegalArgumentException("Текст комментария не задан или слишком короткий");
+            throw new IncorrectTextException("Текст комментария не задан или слишком короткий");
         Comment comment = new Comment();
         Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
         comment.setPost(post);
@@ -228,7 +229,6 @@ public class PostService {
 
     @Transactional
     public SimpleResponseDto likePost(VoteRequest request){
-
         User user = userService.getCurrentUser();
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote vote = voteService.findLike(post, user);
@@ -242,7 +242,6 @@ public class PostService {
 
     @Transactional
     public SimpleResponseDto dislikePost(VoteRequest request){
-
         User user = userService.getCurrentUser();
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote vote = voteService.findDislike(post, user);
@@ -263,12 +262,21 @@ public class PostService {
         return postDtos;
     }
 
+    private List<ModerationResponse> getModerationPostDTOs(Iterable<Post> posts){
+        List<ModerationResponse> postDtos = new ArrayList<>();
+        posts.forEach(post -> {
+            ModerationResponse postDTO = postDtoMapper.postToModerationResponse(post);
+            postDtos.add(postDTO);
+        });
+        return postDtos;
+    }
+
     private void checkPostParameters(String title, String text, LocalDateTime time){
         if (title == null || title.length() < TITLE_MIN_LENGTH) {
-            throw new IllegalArgumentException("Заголовок не установлен");
+            throw new IncorrectTitleException("Заголовок не установлен");
         }
         if (text == null || text.length() < TEXT_MIN_LENGTH) {
-            throw new IllegalArgumentException("Текст публикации слишком короткий");
+            throw new IncorrectTextException("Текст публикации слишком короткий");
         }
         LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         if (time.isBefore(currentTime)){

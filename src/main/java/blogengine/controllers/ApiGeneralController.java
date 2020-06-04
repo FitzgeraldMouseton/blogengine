@@ -1,12 +1,12 @@
 package blogengine.controllers;
 
-import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.BlogInfo;
 import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
 import blogengine.models.dto.blogdto.commentdto.CommentRequest;
+import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.tagdto.TagsResponse;
 import blogengine.models.dto.userdto.ChangeProfileRequest;
 import blogengine.services.GeneralService;
@@ -14,13 +14,12 @@ import blogengine.services.PostService;
 import blogengine.services.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -35,7 +34,6 @@ public class ApiGeneralController {
 
     @GetMapping("/init")
     public BlogInfo getBlogInfo() {
-
         return new BlogInfo();
     }
 
@@ -65,15 +63,8 @@ public class ApiGeneralController {
     }
 
     @PostMapping("comment")
-    public ResponseEntity<?> addComment(@RequestBody CommentRequest commentRequest){
-        HashMap<String, String> errors = new HashMap<>();
-        try {
-            return ResponseEntity.ok().body(postService.addComment(commentRequest));
-        } catch (IllegalArgumentException ex) {
-            if (ex.getLocalizedMessage().equals("Текст комментария не задан или слишком короткий"))
-                errors.put("text", "Текст комментария не задан или слишком короткий");
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    public ResponseEntity<CommentResponse> addComment(@RequestBody CommentRequest commentRequest){
+        return ResponseEntity.ok().body(postService.addComment(commentRequest));
     }
 
     @PostMapping("image")
@@ -81,9 +72,16 @@ public class ApiGeneralController {
         return generalService.uploadPostImage(image);
     }
 
-    @PostMapping(value = "profile/my")
-    public SimpleResponseDto editProfile(@RequestBody ChangeProfileRequest request) throws IOException {
-        return generalService.editProfile(request);
+    @PostMapping(value = "profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SimpleResponseDto editProfileWithPhoto(@RequestParam MultipartFile photo,
+                                                  @ModelAttribute ChangeProfileRequest request) throws IOException {
+
+        return generalService.editProfileWithPhoto(photo, request);
+    }
+
+    @PostMapping(value = "profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public SimpleResponseDto editProfile(@RequestBody ChangeProfileRequest request) {
+        return generalService.editProfileWithoutPhoto(request);
     }
 
     @GetMapping("settings")

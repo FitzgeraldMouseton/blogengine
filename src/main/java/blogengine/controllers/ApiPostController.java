@@ -1,12 +1,11 @@
 package blogengine.controllers;
 
-import blogengine.exceptions.UserNotFoundException;
+import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.models.dto.SimpleResponseDto;
-import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
-import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.dto.blogdto.postdto.PostsInfo;
+import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.services.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 
 @Slf4j
 @RestController
@@ -60,38 +58,16 @@ public class ApiPostController {
 
     @PostMapping
     public ResponseEntity<?> addPost(@RequestBody AddPostRequest request){
-        HashMap<String, String> errors = new HashMap<>();
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(postService.addPost(request));
-        } catch (IllegalArgumentException ex){
-            if(ex.getLocalizedMessage().equals("Заголовок не установлен")){
-                errors.put("title", "Заголовок не установлен");
-            } else if (ex.getLocalizedMessage().equals("Текст публикации слишком короткий")){
-                errors.put("text", "Текст публикации слишком короткий");
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.addPost(request));
     }
 
     @PutMapping("{id}")
     public ResponseEntity<?> editPost(@PathVariable int id, @RequestBody AddPostRequest request){
-        log.info("trig");
-        HashMap<String, String> errors = new HashMap<>();
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(postService.editPost(id, request));
-        } catch (IllegalArgumentException ex){
-            if(ex.getLocalizedMessage().equals("Заголовок не установлен")){
-                errors.put("title", "Заголовок не установлен");
-            } else if (ex.getLocalizedMessage().equals("Текст публикации слишком короткий")){
-                errors.put("text", "Текст публикации слишком короткий");
-            }
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.editPost(id, request));
     }
 
     @PostMapping("like")
     public SimpleResponseDto addLike(@RequestBody VoteRequest request){
-        log.info("like c");
         return postService.likePost(request);
     }
 

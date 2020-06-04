@@ -12,8 +12,8 @@ spring:
     initialization-mode: never
   mail:
     host: smtp.yandex.ru
-    username: email@yandex.ru
-    password: password
+    username: fitzgerald.mouseton@yandex.ru
+    password: Cheese&Water
     port: 465
     protocol: smtps
 
@@ -21,3 +21,9 @@ spring:
     multipart:
       max-file-size: 5MB
       enabled: false
+captcha:
+  expiration:
+    time: 3600
+restorecode:
+  expiration:
+    time: 3600
