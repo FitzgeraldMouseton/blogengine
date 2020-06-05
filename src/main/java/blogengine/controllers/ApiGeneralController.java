@@ -1,5 +1,6 @@
 package blogengine.controllers;
 
+import blogengine.models.CaptchaCode;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.BlogInfo;
 import blogengine.models.dto.blogdto.CalendarDto;
@@ -9,6 +10,7 @@ import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.tagdto.TagsResponse;
 import blogengine.models.dto.userdto.ChangeProfileRequest;
+import blogengine.services.CaptchaService;
 import blogengine.services.GeneralService;
 import blogengine.services.PostService;
 import blogengine.services.TagService;
@@ -31,6 +33,7 @@ public class ApiGeneralController {
     private final TagService tagService;
     private final GeneralService generalService;
     private final PostService postService;
+    private final CaptchaService captchaService;
 
     @GetMapping("/init")
     public BlogInfo getBlogInfo() {
@@ -92,5 +95,11 @@ public class ApiGeneralController {
     @PutMapping("settings")
     public void changeSettings(@RequestBody Map<String, Boolean> request){
         generalService.changeSettings(request);
+    }
+
+    @DeleteMapping
+    public void deleteCaptcha(@RequestParam String code){
+        CaptchaCode captchaCode = captchaService.findBySecretCode(code);
+        captchaService.delete(captchaCode);
     }
 }

@@ -1,8 +1,8 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class IncorrectCredentialsException extends RootApplicationException {
+public class IncorrectCredentialsException extends AbstractBadRequestException {
 
     public IncorrectCredentialsException(String message) {
         super(message);

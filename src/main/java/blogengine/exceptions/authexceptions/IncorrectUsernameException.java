@@ -1,8 +1,8 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class IncorrectUsernameException extends RootApplicationException {
+public class IncorrectUsernameException extends AbstractBadRequestException {
 
     public IncorrectUsernameException(String message) {
         super(message);

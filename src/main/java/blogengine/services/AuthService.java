@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,11 +33,7 @@ public class AuthService {
     private final CaptchaService captchaService;
     private final SessionStorage sessionStorage;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final ThreadPoolTaskScheduler taskScheduler;
     private final RequestChecker requestChecker;
-
-    @Value("${captcha.expiration.time}")
-    private Integer captchaExistenceTime;
 
     @Transactional
     public AuthenticationResponse login(LoginRequest loginRequest) {
@@ -60,8 +55,6 @@ public class AuthService {
         User user = userDtoMapper.registerDtoToUser(registerRequest);
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userService.save(user);
-        taskScheduler.schedule(() -> captchaService.deleteCaptchaCodeBySecretCode(captcha.getSecretCode()),
-                Instant.now().plusSeconds(captchaExistenceTime));
         return new SimpleResponseDto(true);
     }
 

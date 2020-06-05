@@ -4,9 +4,16 @@ import blogengine.models.CaptchaCode;
 import blogengine.models.dto.authdto.CaptchaDto;
 import blogengine.repositories.CaptchaRepository;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,11 +22,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CaptchaService {
 
-    private CaptchaRepository captchaRepository;
+    private final CaptchaRepository captchaRepository;
+    private final TaskScheduler taskScheduler;
+
+    @Value("${captcha.expiration.time}")
+    private Integer captchaExistenceTime;
 
     public CaptchaCode findBySecretCode(String code){
         return captchaRepository.findBySecretCode(code).orElse(null);
@@ -29,13 +41,18 @@ public class CaptchaService {
         captchaRepository.save(captchaCode);
     }
 
+    @Transactional
     public void delete(CaptchaCode captchaCode) {
         captchaRepository.delete(captchaCode);
     }
 
     @Transactional
     public void deleteCaptchaCodeBySecretCode(String secretCode) {
-        captchaRepository.deleteCaptchaCodeBySecretCode(secretCode);
+        captchaRepository.deleteBySecretCode(secretCode);
+    }
+
+    public List<CaptchaCode> getAllCaptchaCodes(){
+        return captchaRepository.findAllBy();
     }
 
     public CaptchaDto generateCaptcha(){
@@ -46,7 +63,6 @@ public class CaptchaService {
         BufferedImage image = generateCaptchaImage(code);
 
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-
             ImageIO.write(image, "png", os);
             captchaDto.setSecret(secretCode);
             captchaDto.setImage("data:image/png;charset=utf-8;base64, " +
@@ -58,6 +74,8 @@ public class CaptchaService {
 
         CaptchaCode captchaCode = new CaptchaCode(code, secretCode, LocalDateTime.now());
         captchaRepository.save(captchaCode);
+        taskScheduler.schedule(() -> captchaRepository.deleteBySecretCode(secretCode),
+                Instant.now().plusSeconds(captchaExistenceTime));
         return captchaDto;
     }
 

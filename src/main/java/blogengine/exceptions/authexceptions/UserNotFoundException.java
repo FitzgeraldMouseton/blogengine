@@ -1,8 +1,8 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class UserNotFoundException extends RootApplicationException {
+public class UserNotFoundException extends AbstractBadRequestException {
 
     public UserNotFoundException(String message){
         super(message);

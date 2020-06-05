@@ -1,8 +1,8 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class UserAlreadyExistsException extends RootApplicationException {
+public class UserAlreadyExistsException extends AbstractBadRequestException {
 
     public UserAlreadyExistsException(String message){
         super(message);

@@ -12,8 +12,8 @@ spring:
     initialization-mode: never
   mail:
     host: smtp.yandex.ru
-    username: fitzgerald.mouseton@yandex.ru
-    password: Cheese&Water
+    username: email@yandex.ru
+    password: password
     port: 465
     protocol: smtps
 

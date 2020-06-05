@@ -1,8 +1,8 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class PasswordRestoreException extends RootApplicationException {
+public class PasswordRestoreException extends AbstractBadRequestException {
 
     public PasswordRestoreException(String message) {
         super(message);

@@ -1,8 +1,8 @@
 package blogengine.exceptions.blogexceptions;
 
-import blogengine.exceptions.RootApplicationException;
+import blogengine.exceptions.AbstractBadRequestException;
 
-public class IncorrectTextException extends RootApplicationException {
+public class IncorrectTextException extends AbstractBadRequestException {
 
     public IncorrectTextException(String message) {
         super(message);

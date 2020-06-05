@@ -22,6 +22,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 
+/**
+ * Класс содержит методы, проверяющие различные запросы с фронта на корректность
+ */
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -53,13 +57,14 @@ public class RequestChecker {
         }
     }
 
-    public void checkRegistrationRequest(RegisterRequest registerRequest, CaptchaCode captchaFromDatabase) {
-        if (userService.findByEmail(registerRequest.getEmail()) != null)
+    public void checkRegistrationRequest(RegisterRequest registerRequest, CaptchaCode captcha) {
+        if (userService.findByEmail(registerRequest.getEmail()) != null) {
             throw new UserAlreadyExistsException("Этот e-mail уже зарегистрирован");
-        if (captchaFromDatabase == null || !captchaFromDatabase.getCode().equals(registerRequest.getCaptchaCode())) {
+        }
+        if (captcha == null || !captcha.getCode().equals(registerRequest.getCaptchaCode())) {
             throw new IncorrectCaptchaCodeException("Код с картинки введён неверно");
         }
-        deleteCaptchaIfExpired(captchaFromDatabase);
+        deleteCaptchaIfExpired(captcha);
         String name = registerRequest.getName();
         if (name.length() < 3 || !name.chars().allMatch(Character::isAlphabetic)) {
             throw new IncorrectUsernameException("Имя указано неверно");
@@ -76,7 +81,7 @@ public class RequestChecker {
             throw new PasswordRestoreException("Ссылка для восстановления пароля устарела.<a href=\"/auth/restore\">Запросить ссылку снова</a>");
         }
         CaptchaCode captchaCode = captchaService.findBySecretCode(request.getCaptchaSecret());
-        if (captchaCode == null || !captchaCode.getCode().equals(request.getCode())) {
+        if (captchaCode == null || !captchaCode.getCode().equals(request.getCaptcha())) {
             throw new IncorrectCaptchaCodeException("Код с картинки введён неверно");
         }
         deleteCaptchaIfExpired(captchaCode);
