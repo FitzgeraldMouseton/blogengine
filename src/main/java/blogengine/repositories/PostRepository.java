@@ -90,13 +90,18 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
         return findAllByModeratorAndActiveTrueAndModerationStatus(moderator, moderationStatus, pageable);
     }
 
-    // ======================== Count posts for moderation
+    // ======================== Count posts related to current user if he is moderator
     Long countAllByModeratorAndActiveTrue(User moderator);
+
+    // ======================== Count posts for moderationCount value of current moderator
+
+    @Query("select count(p) from Post p where p.moderator = :moderator and p.moderationStatus = 'NEW' and p.active = true")
+    int countPostsForModeration(User moderator);
 
     // ======================== Find first post
     Optional<Post> findFirstByOrderByTime();
 
-    // ======================== Find first post
+    // ========================
     @Query("select sum(p.viewCount) from Post p where p.user = :user")
     Long countUserPostsViews(User user);
 }

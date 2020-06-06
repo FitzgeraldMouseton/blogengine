@@ -66,7 +66,7 @@ public class PostDtoMapper {
     }
 
     public ModerationResponse postToModerationResponse(Post post){
-        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        dateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd, HH:mm");
         ModerationResponse response = new ModerationResponse();
         response.setId(post.getId());
         response.setTime(dateFormat.format(post.getTime()));

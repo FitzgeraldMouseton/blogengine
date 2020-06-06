@@ -4,7 +4,9 @@ import blogengine.models.User;
 import blogengine.models.dto.authdto.RegisterRequest;
 import blogengine.models.dto.authdto.UserLoginDto;
 import blogengine.models.dto.userdto.UserDto;
+import blogengine.services.PostService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -13,8 +15,13 @@ import java.time.LocalDateTime;
 @Component
 public class UserDtoMapper {
 
-    public UserDto userToUserDto(User user) {
+    private final PostService postService;
 
+    public UserDtoMapper(@Lazy PostService postService) {
+        this.postService = postService;
+    }
+
+    UserDto userToUserDto(User user) {
         UserDto userDTO = new UserDto();
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
@@ -30,7 +37,10 @@ public class UserDtoMapper {
         loginDto.setPhoto(user.getPhoto());
         loginDto.setEmail(user.getEmail());
         loginDto.setModeration(user.isModerator());
-        loginDto.setModerationCount(0);
+        if (user.isModerator())
+            loginDto.setModerationCount(postService.countPostsForModeration(user));
+        else
+            loginDto.setModerationCount(0);
         loginDto.setSettings(true);
         return loginDto;
     }

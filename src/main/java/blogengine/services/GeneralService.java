@@ -50,6 +50,7 @@ public class GeneralService {
 
         User user = userService.getCurrentUser();
         Long postsCount = postService.countUserPosts(user);
+        log.info(String.valueOf(postsCount));
         Post firstPost = postService.findFirstPost();
         String firstPostDate = dateFormat.format(firstPost.getTime());
         Long likesCount = voteService.countLikesOfUser(user);

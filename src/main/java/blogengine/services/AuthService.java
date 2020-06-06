@@ -11,7 +11,6 @@ import blogengine.util.mail.EmailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,12 +27,12 @@ import java.util.Base64;
 public class AuthService {
 
     private final UserService userService;
-    private final UserDtoMapper userDtoMapper;
     private final EmailServiceImpl emailService;
     private final CaptchaService captchaService;
     private final SessionStorage sessionStorage;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final RequestChecker requestChecker;
+    private final UserDtoMapper userDtoMapper;
 
     @Transactional
     public AuthenticationResponse login(LoginRequest loginRequest) {

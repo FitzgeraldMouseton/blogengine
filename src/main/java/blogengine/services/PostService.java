@@ -39,8 +39,6 @@ public class PostService {
     private final VoteService voteService;
     private final RequestChecker requestChecker;
 
-    private static final short COMMENT_MIN_LENGTH = 5;
-
     //================================= Methods for working with repository =======================
 
     Post findPostById(Integer id){
@@ -65,6 +63,10 @@ public class PostService {
 
     Post findFirstPost(){
         return postRepository.findFirstByOrderByTime().orElse(null);
+    }
+
+    public int countPostsForModeration(User moderator) {
+        return postRepository.countPostsForModeration(moderator);
     }
 
     //================================= Main logic methods ==========================================
@@ -124,7 +126,6 @@ public class PostService {
     public PostsInfo<ModerationResponse> postsForModeration(int offset, int limit, String status){
         User user = userService.getCurrentUser();
         if(user.isModerator()){
-            log.info("trig");
             long count = postRepository.countAllByModeratorAndActiveTrue(user);
             List<Post> posts;
             Pageable pageable = PageRequest.of(offset/limit, limit);
