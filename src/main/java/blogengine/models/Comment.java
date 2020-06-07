@@ -6,10 +6,9 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -39,5 +38,6 @@ public class Comment {
     @NotNull
     private LocalDateTime time;
 
+    @Size(min = 6)
     private String text;
 }

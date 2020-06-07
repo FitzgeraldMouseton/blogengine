@@ -8,5 +8,5 @@ import lombok.Data;
 public class AuthenticationResponse {
 
     private boolean result;
-    private UserLoginDto user;
+    private UserLoginResponse user;
 }

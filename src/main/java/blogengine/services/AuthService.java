@@ -1,11 +1,11 @@
 package blogengine.services;
 
+import blogengine.exceptions.authexceptions.IncorrectCredentialsException;
+import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.mappers.UserDtoMapper;
-import blogengine.models.CaptchaCode;
 import blogengine.models.User;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
-import blogengine.util.RequestChecker;
 import blogengine.util.SessionStorage;
 import blogengine.util.mail.EmailServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -28,31 +28,32 @@ public class AuthService {
 
     private final UserService userService;
     private final EmailServiceImpl emailService;
-    private final CaptchaService captchaService;
     private final SessionStorage sessionStorage;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final RequestChecker requestChecker;
     private final UserDtoMapper userDtoMapper;
+    private final BCryptPasswordEncoder encoder;
 
     @Transactional
     public AuthenticationResponse login(LoginRequest loginRequest) {
         AuthenticationResponse loginResponse;
         User user = userService.findByEmail(loginRequest.getEmail());
-        requestChecker.checkLoginRequest(user, loginRequest);
+        if (user == null) {
+            throw new UserNotFoundException("Не найден пользователь с таким адресом почты: " + loginRequest.getEmail());
+        }
+        if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new IncorrectCredentialsException("Неверно введены данные");
+        }
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         Integer userId = user.getId();
         sessionStorage.getSessions().put(sessionId, userId);
-        UserLoginDto loginDto = userDtoMapper.userToLoginDto(user);
+        UserLoginResponse loginDto = userDtoMapper.userToLoginResponse(user);
         loginResponse = new AuthenticationResponse(true, loginDto);
         return loginResponse;
     }
 
     @Transactional
     public SimpleResponseDto register(RegisterRequest registerRequest) {
-        CaptchaCode captcha = captchaService.findBySecretCode(registerRequest.getCaptchaSecret());
-        requestChecker.checkRegistrationRequest(registerRequest, captcha);
-        User user = userDtoMapper.registerDtoToUser(registerRequest);
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        User user = userDtoMapper.registerRequestToUser(registerRequest);
+        user.setPassword(encoder.encode(user.getPassword()));
         userService.save(user);
         return new SimpleResponseDto(true);
     }
@@ -62,7 +63,7 @@ public class AuthService {
         if (!sessionStorage.getSessions().values().isEmpty()) {
             int userId = sessionStorage.getSessions().get(sessionId);
             User user = userService.findById(userId);
-            UserLoginDto userDTO = userDtoMapper.userToLoginDto(user);
+            UserLoginResponse userDTO = userDtoMapper.userToLoginResponse(user);
             return new AuthenticationResponse(true, userDTO);
         }
         return null;
@@ -77,15 +78,14 @@ public class AuthService {
         user.setCode(code);
         userService.save(user);
         String message = "Для восстановления пароля перейдите по ссылке http://localhost:8080/login/change-password/" + code;
-        emailService.send(email, "Васстановление пароля", message);
+        emailService.send(email, "Восстановление пароля", message);
         return new SimpleResponseDto(true);
     }
 
     public SimpleResponseDto setNewPassword(SetPassRequest request) {
         String code = request.getCode();
         User user = userService.findByCode(code);
-        requestChecker.checkSetNewPasswordRequest(request, user);
-        user.setPassword(bCryptPasswordEncoder.encode(request.getPassword()));
+        user.setPassword(encoder.encode(request.getPassword()));
         user.setCode("");
         userService.save(user);
         return new SimpleResponseDto(true);

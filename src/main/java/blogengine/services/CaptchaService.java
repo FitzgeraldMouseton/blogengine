@@ -37,6 +37,11 @@ public class CaptchaService {
         return captchaRepository.findBySecretCode(code).orElse(null);
     }
 
+    public CaptchaCode findByCode(String code){
+        return captchaRepository.findByCode(code).orElse(null);
+    }
+
+
     public void save(CaptchaCode captchaCode){
         captchaRepository.save(captchaCode);
     }

@@ -2,15 +2,15 @@ package blogengine.models.dto;
 
 import lombok.Data;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @Data
 public class ErrorResponse {
 
     private boolean result = false;
-    private HashMap<String, String> errors;
+    private Map<String, String> errors;
 
-    public ErrorResponse(HashMap<String, String> errors) {
+    public ErrorResponse(Map<String, String> errors) {
         this.errors = errors;
     }
 }

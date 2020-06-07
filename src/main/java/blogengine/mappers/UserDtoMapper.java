@@ -2,7 +2,7 @@ package blogengine.mappers;
 
 import blogengine.models.User;
 import blogengine.models.dto.authdto.RegisterRequest;
-import blogengine.models.dto.authdto.UserLoginDto;
+import blogengine.models.dto.authdto.UserLoginResponse;
 import blogengine.models.dto.userdto.UserDto;
 import blogengine.services.PostService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ public class UserDtoMapper {
         return userDTO;
     }
 
-    public UserLoginDto userToLoginDto(User user){
+    public UserLoginResponse userToLoginResponse(User user){
 
-        UserLoginDto loginDto = new UserLoginDto();
+        UserLoginResponse loginDto = new UserLoginResponse();
         loginDto.setId(user.getId());
         loginDto.setName(user.getName());
         loginDto.setPhoto(user.getPhoto());
@@ -45,10 +45,10 @@ public class UserDtoMapper {
         return loginDto;
     }
 
-    public User registerDtoToUser(RegisterRequest request){
+    public User registerRequestToUser(RegisterRequest request){
         User user = new User();
         user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(request.getPassword());
         user.setRegTime(LocalDateTime.now());
         user.setModerator(false);

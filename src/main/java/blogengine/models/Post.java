@@ -2,9 +2,12 @@ package blogengine.models;
 
 import lombok.*;
 import org.hibernate.annotations.Type;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -44,10 +47,12 @@ public class Post {
     private LocalDateTime time;
 
     @NotNull
+    @Size(min = 10)
     private String title;
 
     @NotNull
     @Column(columnDefinition = "TEXT")
+    @Size(min = 100)
     private String text;
 
     @NotNull

@@ -15,6 +15,8 @@ public interface CaptchaRepository extends CrudRepository<CaptchaCode, Integer> 
 
     Optional<CaptchaCode> findBySecretCode(String code);
 
+    Optional<CaptchaCode> findByCode(String code);
+
     List<CaptchaCode> findAllBy();
 
     @Transactional

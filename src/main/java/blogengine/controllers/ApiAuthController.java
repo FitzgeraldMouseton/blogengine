@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 @Slf4j
 @RestController
@@ -27,7 +28,7 @@ public class ApiAuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<SimpleResponseDto> register(@RequestBody RegisterRequest registerRequest) throws Exception {
+    public ResponseEntity<SimpleResponseDto> register(@Valid @RequestBody RegisterRequest registerRequest) {
         return ResponseEntity.ok().body(authService.register(registerRequest));
     }
 
@@ -51,7 +52,7 @@ public class ApiAuthController {
     }
 
     @PostMapping("password")
-    public ResponseEntity<SimpleResponseDto> setNewPassword(@RequestBody SetPassRequest setPassDto){
+    public ResponseEntity<SimpleResponseDto> setNewPassword(@Valid @RequestBody SetPassRequest setPassDto){
         return ResponseEntity.ok().body(authService.setNewPassword(setPassDto));
     }
 

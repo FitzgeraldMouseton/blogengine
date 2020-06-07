@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ public class ApiGeneralController {
     }
 
     @PostMapping("comment")
-    public ResponseEntity<CommentResponse> addComment(@RequestBody CommentRequest commentRequest){
+    public ResponseEntity<CommentResponse> addComment(@Valid @RequestBody CommentRequest commentRequest){
         return ResponseEntity.ok().body(postService.addComment(commentRequest));
     }
 

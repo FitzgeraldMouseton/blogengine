@@ -12,7 +12,6 @@ import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.dto.blogdto.postdto.PostsInfo;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
-import blogengine.util.RequestChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -37,7 +37,6 @@ public class PostService {
     private final UserService userService;
     private final CommentService commentService;
     private final VoteService voteService;
-    private final RequestChecker requestChecker;
 
     //================================= Methods for working with repository =======================
 
@@ -183,7 +182,7 @@ public class PostService {
         User moderator = userService.getModerator();
         Post post = new Post();
         postDtoMapper.addPostRequestToPost(request, post);
-        requestChecker.checkPostParameters(post.getTitle(), post.getText(), post.getTime());
+        checkPostParameters(post.getTime());
         post.setModerationStatus(ModerationStatus.NEW);
         post.setUser(user);
         post.setModerator(moderator);
@@ -199,7 +198,7 @@ public class PostService {
         }
         Post post = postOptional.get();
         postDtoMapper.addPostRequestToPost(request, post);
-        requestChecker.checkPostParameters(post.getTitle(), post.getText(), post.getTime());
+        checkPostParameters(post.getTime());
 //        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 //        if (post.getTime().isBefore(currentTime)){
 //            post.setTime(currentTime);
@@ -212,7 +211,6 @@ public class PostService {
     }
 
     public CommentResponse addComment(CommentRequest request){
-        requestChecker.checkCommentRequest(request);
         Comment comment = new Comment();
         Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
         comment.setPost(post);
@@ -271,5 +269,12 @@ public class PostService {
             postDtos.add(postDTO);
         });
         return postDtos;
+    }
+
+    public void checkPostParameters(LocalDateTime time){
+        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        if (time.isBefore(currentTime)){
+            throw new IllegalArgumentException("Неправильная дата");
+        }
     }
 }
