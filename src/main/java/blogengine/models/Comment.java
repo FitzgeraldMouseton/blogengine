@@ -1,5 +1,6 @@
 package blogengine.models;
 
+import blogengine.models.postconstants.PostConstraints;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
@@ -38,6 +39,6 @@ public class Comment {
     @NotNull
     private LocalDateTime time;
 
-    @Size(min = 6)
+    @Size(min = PostConstraints.MIN_COMMENT_SIZE)
     private String text;
 }

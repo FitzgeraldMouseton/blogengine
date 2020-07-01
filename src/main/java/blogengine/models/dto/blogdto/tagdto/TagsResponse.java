@@ -7,5 +7,5 @@ import lombok.Data;
 @AllArgsConstructor
 public class TagsResponse {
 
-    SingleTagDto[] tags;
+    private SingleTagDto[] tags;
 }

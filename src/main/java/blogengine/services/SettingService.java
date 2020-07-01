@@ -16,25 +16,32 @@ public class SettingService {
     private final SettingsRepository settingsRepository;
 
     @Value("#{${settings}}")
-    HashMap<String, String> settings;
+    private HashMap<String, String> settings;
 
-    public List<GlobalSetting> getSettings(){
+    @Value("${setting.multiuser}")
+    private String multiuserSetting;
+
+    public List<GlobalSetting> getSettings() {
         return settingsRepository.findAllBy();
     }
 
-    public GlobalSetting getSettingByCode(String code){
-        return settingsRepository.findByCode(code).orElse(null);
-    }
-
-    public void save(GlobalSetting setting){
+    public void save(final GlobalSetting setting) {
         settingsRepository.save(setting);
     }
 
-    public void fillSettings(){
+    public boolean isMultiUserEnabled() {
+        return settingsRepository.findByCode(multiuserSetting).get().getValue();
+    }
+
+    GlobalSetting getSettingByCode(final String code) {
+        return settingsRepository.findByCode(code).orElse(null);
+    }
+
+    void fillSettings() {
         settings.forEach((k,v) -> settingsRepository.save(new GlobalSetting(k, v, false)));
     }
 
-    public GlobalSetting setSetting(String setting, Boolean isActive){
+    GlobalSetting setSetting(final String setting, final Boolean isActive) {
         return new GlobalSetting(setting, settings.get(setting), isActive);
     }
 }

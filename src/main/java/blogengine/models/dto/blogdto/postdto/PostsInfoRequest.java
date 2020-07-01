@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PostsInfo<T> {
+public class PostsInfoRequest<T> {
 
-    long count;
-    List<T> posts;
+    private long count;
+    private List<T> posts;
 }

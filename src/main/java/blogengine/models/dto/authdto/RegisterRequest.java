@@ -1,5 +1,6 @@
 package blogengine.models.dto.authdto;
 
+import blogengine.models.postconstants.UserConstraints;
 import blogengine.util.validation.constraints.CaptchaNotMatchingConstraint;
 import blogengine.util.validation.constraints.CaptchaNotExpiredConstraint;
 import blogengine.util.validation.constraints.EmailUniqueConstraint;
@@ -15,9 +16,10 @@ public class RegisterRequest {
     @EmailUniqueConstraint
     private String email;
 
-    @Size(min = 2, message = "Имя указано неверно")
+    @Size(min = UserConstraints.MIN_USER_NAME_LENGTH, message = "Имя указано неверно")
     private String name;
 
+    @Size(min = UserConstraints.MIN_PASSWORD_LENGTH, message = "Пароль не может быть короче 6 символов")
     private String password;
 
     @CaptchaNotMatchingConstraint

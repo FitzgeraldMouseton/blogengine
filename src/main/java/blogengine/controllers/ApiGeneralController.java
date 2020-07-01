@@ -16,6 +16,7 @@ import blogengine.services.PostService;
 import blogengine.services.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,17 +43,17 @@ public class ApiGeneralController {
     }
 
     @PostMapping("moderation")
-    public void moderation(@RequestBody ModerationRequest request){
+    public void moderation(@RequestBody final ModerationRequest request) {
         generalService.moderation(request);
     }
 
     @GetMapping("/tag")
-    public TagsResponse getTags(String query) {
+    public TagsResponse getTags(final String query) {
         return tagService.findTagsByName(query);
     }
 
     @GetMapping("statistics/my")
-    public StatisticsDto getUserStatistics(){
+    public StatisticsDto getUserStatistics() {
         return generalService.getCurrentUserStatistics();
     }
 
@@ -62,29 +63,29 @@ public class ApiGeneralController {
     }
 
     @GetMapping("calendar")
-    public CalendarDto calendar(@RequestParam int year){
+    public CalendarDto calendar(@RequestParam final int year) {
         return generalService.calendar(year);
     }
 
     @PostMapping("comment")
-    public ResponseEntity<CommentResponse> addComment(@Valid @RequestBody CommentRequest commentRequest){
+    public ResponseEntity<CommentResponse> addComment(@Valid @RequestBody final CommentRequest commentRequest) {
         return ResponseEntity.ok().body(postService.addComment(commentRequest));
     }
 
     @PostMapping("image")
-    public String uploadImage(@RequestParam MultipartFile image) throws IOException {
+    public String uploadImage(@RequestParam final MultipartFile image) throws IOException {
         return generalService.uploadPostImage(image);
     }
 
     @PostMapping(value = "profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public SimpleResponseDto editProfileWithPhoto(@RequestParam MultipartFile photo,
-                                                  @ModelAttribute ChangeProfileRequest request) throws IOException {
+    public SimpleResponseDto editProfileWithPhoto(@RequestParam final MultipartFile photo,
+                                                  @ModelAttribute @Valid final ChangeProfileRequest request) throws IOException {
 
         return generalService.editProfileWithPhoto(photo, request);
     }
 
     @PostMapping(value = "profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public SimpleResponseDto editProfile(@RequestBody ChangeProfileRequest request) {
+    public SimpleResponseDto editProfile(@Valid @RequestBody final ChangeProfileRequest request) {
         return generalService.editProfileWithoutPhoto(request);
     }
 
@@ -99,7 +100,7 @@ public class ApiGeneralController {
     }
 
     @DeleteMapping
-    public void deleteCaptcha(@RequestParam String code){
+    public void deleteCaptcha(@RequestParam final String code){
         CaptchaCode captchaCode = captchaService.findBySecretCode(code);
         captchaService.delete(captchaCode);
     }

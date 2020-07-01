@@ -32,18 +32,18 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     }
 
     // ========================= Popular posts
-    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
-            "ORDER BY size(p.comments) DESC")
-    List<Post> findPopularPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date "
+            + "ORDER BY size(p.comments) DESC")
+    List<Post> getPopularPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
     // ========================= Best posts
-    @Query("SELECT p FROM Post p LEFT JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
-            "GROUP BY p.id ORDER BY sum(v.value) DESC")
-    List<Post> findBestPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
+    @Query("SELECT p FROM Post p LEFT JOIN p.votes v WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date "
+            + "GROUP BY p.id ORDER BY sum(v.value) DESC")
+    List<Post> getBestPosts(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
 
     // ========================= Find posts by query
-    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date " +
-            "AND (p.text LIKE %:query% or p.title LIKE %:query%)")
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time <= :date "
+            + "AND (p.text LIKE %:query% or p.title LIKE %:query%)")
     List<Post> findPostsByQuery(ModerationStatus moderationStatus, LocalDateTime date, String query, Pageable pageable);
 
     // ========================= Find post by id
@@ -58,8 +58,8 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     List<Post> findPostsByDate(ModerationStatus moderationStatus, LocalDateTime startOfDay, LocalDateTime endOfDay, Pageable pageable);
 
     // ========================= Find posts by tag
-    @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 " +
-            "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
+    @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 "
+            + "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
     List<Post> findAllByTag(ModerationStatus moderationStatus, LocalDateTime date, String tag, Pageable pageable);
 
     // ========================= Find all posts
@@ -84,18 +84,18 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     }
 
     // ======================== Posts for moderation
-    List<Post> findAllByModeratorAndActiveTrueAndModerationStatus(User moderator, ModerationStatus moderationStatus, Pageable pageable);
+    List<Post> findAllByActiveTrueAndModerationStatus(ModerationStatus moderationStatus, Pageable pageable);
 
-    default List<Post> getPostsForModeration(User moderator, ModerationStatus moderationStatus, Pageable pageable) {
-        return findAllByModeratorAndActiveTrueAndModerationStatus(moderator, moderationStatus, pageable);
+    default List<Post> getPostsForModeration(ModerationStatus moderationStatus, Pageable pageable) {
+        return findAllByActiveTrueAndModerationStatus(moderationStatus, pageable);
     }
 
     // ======================== Count posts related to current user if he is moderator
-    Long countAllByModeratorAndActiveTrue(User moderator);
+    Long countAllByModerationStatusAndActiveTrue(ModerationStatus moderationStatus);
 
     // ======================== Count posts for moderationCount value of current moderator
 
-    @Query("select count(p) from Post p where p.moderator = :moderator and p.moderationStatus = 'NEW' and p.active = true")
+    @Query("select count(p) from Post p where p.moderationStatus = 'NEW' and p.active = true")
     int countPostsForModeration(User moderator);
 
     // ======================== Find first post

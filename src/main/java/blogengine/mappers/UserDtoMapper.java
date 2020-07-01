@@ -21,7 +21,7 @@ public class UserDtoMapper {
         this.postService = postService;
     }
 
-    UserDto userToUserDto(User user) {
+    UserDto userToUserDto(final User user) {
         UserDto userDTO = new UserDto();
         userDTO.setId(user.getId());
         userDTO.setName(user.getName());
@@ -29,7 +29,7 @@ public class UserDtoMapper {
         return userDTO;
     }
 
-    public UserLoginResponse userToLoginResponse(User user){
+    public UserLoginResponse userToLoginResponse(final User user) {
 
         UserLoginResponse loginDto = new UserLoginResponse();
         loginDto.setId(user.getId());
@@ -45,7 +45,7 @@ public class UserDtoMapper {
         return loginDto;
     }
 
-    public User registerRequestToUser(RegisterRequest request){
+    public User registerRequestToUser(final RegisterRequest request) {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail().trim().toLowerCase());

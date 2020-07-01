@@ -20,55 +20,55 @@ public class VoteService {
     private static final byte LIKE = 1;
     private static final byte DISLIKE = -1;
 
-    public void save(Vote vote){
+    public void save(final Vote vote) {
         voteRepository.save(vote);
     }
 
-    Long countLikesOfUser(User user){
+    Long countLikesOfUser(final User user) {
         return voteRepository.countVotesOfUserPosts(user, LIKE);
     }
 
-    Long countDislikesOfUser(User user){
+    Long countDislikesOfUser(final User user) {
         return voteRepository.countVotesOfUserPosts(user, DISLIKE);
     }
 
-    Vote findLike(Post post, User user){
+    Vote findLike(final Post post, final User user) {
         return voteRepository.findByPostAndUserAndValue(post, user, LIKE).orElse(null);
     }
 
-    Vote findDislike(Post post, User user){
+    Vote findDislike(final Post post, final User user) {
         return voteRepository.findByPostAndUserAndValue(post, user, DISLIKE).orElse(null);
     }
 
-    public void delete(Vote vote){
+    public void delete(final Vote vote) {
         voteRepository.delete(vote);
     }
 
-    void setLike(Post post, User user){
+    void setLike(final Post post, final User user) {
         Vote like =  createVote(post, user, LIKE);
         log.info(like.toString());
         voteRepository.save(like);
     }
 
-    void setDislike(Post post, User user){
+    void setDislike(final Post post, final User user) {
         Vote dislike = createVote(post, user, DISLIKE);
         log.info(dislike.toString());
         voteRepository.save(dislike);
     }
 
-    void deleteLikeIfExists(Post post, User user){
+    void deleteLikeIfExists(final Post post, final User user) {
         Vote like = findLike(post, user);
         if (like != null)
             voteRepository.delete(like);
     }
 
-    void deleteDislikeIfExists(Post post, User user){
+    void deleteDislikeIfExists(final Post post, final User user) {
         Vote dislike = findDislike(post, user);
         if (dislike != null)
             voteRepository.delete(dislike);
     }
 
-    private Vote createVote(Post post, User user, byte value){
+    private Vote createVote(final Post post, final User user, final byte value) {
         Vote vote = new Vote();
         vote.setPost(post);
         vote.setUser(user);

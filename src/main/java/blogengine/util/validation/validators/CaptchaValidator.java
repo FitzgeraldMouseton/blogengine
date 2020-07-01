@@ -19,7 +19,7 @@ public class CaptchaValidator implements ConstraintValidator<CaptchaNotMatchingC
     }
 
     @Override
-    public boolean isValid(String captcha, ConstraintValidatorContext cvx) {
+    public boolean isValid(final String captcha, final ConstraintValidatorContext cvx) {
         if (captcha == null || captchaService.findByCode(captcha) == null) {
 //            cvx.disableDefaultConstraintViolation();
 //            cvx.buildConstraintViolationWithTemplate("{cvx: Код с картинки введён неверно}").addPropertyNode("captcha").addConstraintViolation();

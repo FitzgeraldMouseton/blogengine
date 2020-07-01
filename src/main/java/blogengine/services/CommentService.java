@@ -13,11 +13,11 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
 
-    Comment findById(int id){
+    Comment findById(final int id) {
         return commentRepository.findById(id).orElse(null);
     }
 
-    void save(Comment comment){
+    void save(final Comment comment) {
         commentRepository.save(comment);
     }
 }

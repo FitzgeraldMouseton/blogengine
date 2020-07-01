@@ -1,8 +1,6 @@
 package blogengine.models.dto.blogdto;
 
 import lombok.Data;
-
-import java.util.List;
 import java.util.Map;
 
 @Data

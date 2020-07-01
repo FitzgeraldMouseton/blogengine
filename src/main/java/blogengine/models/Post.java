@@ -1,11 +1,10 @@
 package blogengine.models;
 
+import blogengine.models.postconstants.PostConstraints;
 import lombok.*;
 import org.hibernate.annotations.Type;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -39,7 +38,6 @@ public class Post {
     @ManyToOne
     private User user;
 
-    @NotNull
     @ManyToOne
     private User moderator;
 
@@ -47,12 +45,12 @@ public class Post {
     private LocalDateTime time;
 
     @NotNull
-    @Size(min = 10)
+    @Size(min = PostConstraints.MIN_TITLE_SIZE)
     private String title;
 
     @NotNull
     @Column(columnDefinition = "TEXT")
-    @Size(min = 100)
+    @Size(min = PostConstraints.MIN_TEXT_SIZE)
     private String text;
 
     @NotNull
@@ -68,24 +66,23 @@ public class Post {
     @ManyToMany(cascade = CascadeType.PERSIST)
     private Set<Tag> tags = new HashSet<>();
 
-    public void addVote(Vote vote){
+    public void addVote(final Vote vote) {
         this.votes.add(vote);
         vote.setPost(this);
     }
 
-    public void addComment(Comment comment) {
+    public void addComment(final Comment comment) {
         this.comments.add(comment);
         comment.setPost(this);
     }
 
-    public void addTag(Tag tag){
+    public void addTag(final Tag tag) {
         this.tags.add(tag);
         tag.getPosts().add(this);
     }
 
-    public void addTags(Set<Tag> tags){
-        this.tags = tags;
-        tags.forEach(tag -> tag.getPosts().add(this));
+    public void addTags(Set<Tag> tags) {
+        tags.forEach(this::addTag);
     }
 
     @Override
@@ -95,10 +92,6 @@ public class Post {
 
         Post post = (Post) o;
 
-        if (id != post.id) return false;
-        if (active != post.active) return false;
-        if (viewCount != post.viewCount) return false;
-        if (moderationStatus != post.moderationStatus) return false;
         if (!user.equals(post.user)) return false;
         if (!time.equals(post.time)) return false;
         if (!title.equals(post.title)) return false;
@@ -107,14 +100,11 @@ public class Post {
 
     @Override
     public int hashCode() {
-        int result = id;
-        result = 31 * result + (active ? 1 : 0);
-        result = 31 * result + moderationStatus.hashCode();
+        int result = 31;
         result = 31 * result + user.hashCode();
         result = 31 * result + time.hashCode();
         result = 31 * result + title.hashCode();
         result = 31 * result + text.hashCode();
-        result = 31 * result + viewCount;
         return result;
     }
 

@@ -3,24 +3,24 @@ package blogengine.services;
 import blogengine.models.CaptchaCode;
 import blogengine.models.dto.authdto.CaptchaDto;
 import blogengine.repositories.CaptchaRepository;
-import lombok.AllArgsConstructor;
+import blogengine.util.DBEventsCreator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.TaskScheduler;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.util.List;
-
 import javax.imageio.ImageIO;
+import javax.validation.ConstraintValidatorContext;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -28,50 +28,63 @@ import java.time.LocalDateTime;
 public class CaptchaService {
 
     private final CaptchaRepository captchaRepository;
-    private final TaskScheduler taskScheduler;
+    private final DBEventsCreator dbEventsCreator;
 
     @Value("${captcha.expiration.time}")
-    private Integer captchaExistenceTime;
+    private int captchaExpirationTime;
+    @Value("${captcha.code_length}")
+    private int codeLength;
+    @Value("${captcha.secret_length}")
+    private int secretCodeLength;
+    @Value("${captcha.text_size}")
+    private int captchaTextSize;
+    @Value("${captcha.width}")
+    private int captchaWidth;
+    @Value("${captcha.height}")
+    private int captchaHeight;
+    @Value("${captcha.frame_width}")
+    private int captchaFrameWidth;
+    @Value("${captcha.frame_height}")
+    private int captchaFrameHeight;
 
-    public CaptchaCode findBySecretCode(String code){
+    public CaptchaCode findBySecretCode(String code) {
         return captchaRepository.findBySecretCode(code).orElse(null);
     }
 
-    public CaptchaCode findByCode(String code){
+    public CaptchaCode findByCode(final String code) {
         return captchaRepository.findByCode(code).orElse(null);
     }
 
-
-    public void save(CaptchaCode captchaCode){
+    public void save(final CaptchaCode captchaCode) {
         captchaRepository.save(captchaCode);
     }
 
     @Transactional
-    public void delete(CaptchaCode captchaCode) {
+    public void delete(final CaptchaCode captchaCode) {
         captchaRepository.delete(captchaCode);
     }
 
     @Transactional
-    public void deleteCaptchaCodeBySecretCode(String secretCode) {
+    public void deleteCaptchaCodeBySecretCode(final String secretCode) {
         captchaRepository.deleteBySecretCode(secretCode);
     }
 
-    public List<CaptchaCode> getAllCaptchaCodes(){
+    public List<CaptchaCode> getAllCaptchaCodes() {
         return captchaRepository.findAllBy();
     }
 
-    public CaptchaDto generateCaptcha(){
+    public CaptchaDto generateCaptcha() {
 
         CaptchaDto captchaDto = new CaptchaDto();
-        String secretCode = RandomStringUtils.randomAlphanumeric(15);
-        String code = RandomStringUtils.randomAlphanumeric(4);
+        String secretCode = RandomStringUtils.randomAlphanumeric(secretCodeLength);
+        String code = RandomStringUtils.randomAlphanumeric(codeLength);
         BufferedImage image = generateCaptchaImage(code);
 
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             ImageIO.write(image, "png", os);
             captchaDto.setSecret(secretCode);
-            captchaDto.setImage("data:image/png;charset=utf-8;base64, " +
-                    java.util.Base64.getEncoder().encodeToString(os.toByteArray()));
+            captchaDto.setImage("data:image/png;charset=utf-8;base64, "
+                    + java.util.Base64.getEncoder().encodeToString(os.toByteArray()));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -79,22 +92,25 @@ public class CaptchaService {
 
         CaptchaCode captchaCode = new CaptchaCode(code, secretCode, LocalDateTime.now());
         captchaRepository.save(captchaCode);
-        taskScheduler.schedule(() -> captchaRepository.deleteBySecretCode(secretCode),
-                Instant.now().plusSeconds(captchaExistenceTime));
+        dbEventsCreator.deleteCaptchaWhenExpired(captchaCode, captchaExpirationTime);
         return captchaDto;
     }
 
-    private BufferedImage generateCaptchaImage(String code){
+    private BufferedImage generateCaptchaImage(final String code) {
 
-        int width = 100;
-        int height = 35;
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.OPAQUE);
+        BufferedImage image = new BufferedImage(captchaFrameWidth, captchaFrameHeight, BufferedImage.OPAQUE);
         Graphics graphics = image.createGraphics();
-        graphics.setFont(new Font("Arial", Font.BOLD, 15));
-        graphics.setColor(new Color(169, 169, 169));
-        graphics.fillRect(0, 0, width, height);
-        graphics.setColor(new Color(255, 255, 255));
-        graphics.drawString(code, 40, 20);
+        graphics.setFont(new Font("Arial", Font.BOLD, captchaTextSize));
+        graphics.setColor(Color.GRAY);
+        graphics.fillRect(0, 0, captchaFrameWidth, captchaFrameHeight);
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(code, captchaWidth, captchaHeight);
         return image;
     }
+
+//    public boolean isCaptchaCodeExpired(final String captcha) {
+//        Optional<CaptchaCode> captchaCodeOptional = captchaRepository.findByCode(captcha);
+//        return captchaCodeOptional.map(captchaCode
+//                -> LocalDateTime.now().isAfter(captchaCode.getTime().plusSeconds(captchaExpirationTime))).orElse(true);
+//    }
 }

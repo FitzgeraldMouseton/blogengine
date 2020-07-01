@@ -18,31 +18,32 @@ import java.util.stream.Collectors;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final float MIN_TAG_WEIGHT = 0.1f;
 
-    public void save(Tag tag){
+    public void save(final Tag tag) {
         tagRepository.save(tag);
     }
 
-    public Optional<Tag> findTagByName(String name){
-        return tagRepository.findTagByName(name);
-    }
-
-    public TagsResponse findTagsByName(String query) {
+    public TagsResponse findTagsByName(final String query) {
         List<Tag> tagList = (query == null) ? tagRepository.findAllByEmptyQuery()
                 : tagRepository.findAllByNameStartingWith(query);
 
-        Map<String, List<Tag>> collect = tagList.stream().collect(Collectors.groupingBy(Tag::getName));
-        Optional<List<Tag>> maxOptional = collect.values().stream().max(Comparator.comparing(List::size));
-        if(maxOptional.isEmpty()){
-            throw new NoSuchElementException("Лист тэгов пуст");
-        }
-        int maxWeight = maxOptional.get().size();
-        List<SingleTagDto> collect1 = collect.entrySet().stream()
-                .map(entry -> new SingleTagDto(entry.getKey(), Precision.round((double) entry.getValue().size() / maxWeight, 3)))
+        Map<String, Long> collect = tagList.stream().collect(Collectors.groupingBy(Tag::getName, Collectors.counting()));
+        Long maxWeight = Collections.max(collect.values());
+
+        List<SingleTagDto> tagDtoList = collect.entrySet().stream()
+                .map(entry -> {
+                    String tagName = entry.getKey();
+                    float tagWeight = Precision.round((float) entry.getValue() / maxWeight, 3);
+                    if (tagWeight < MIN_TAG_WEIGHT)
+                        tagWeight = MIN_TAG_WEIGHT;
+                    return new SingleTagDto(tagName, tagWeight);
+                })
                 .sorted(Comparator.comparing(SingleTagDto::getWeight).reversed())
                 .collect(Collectors.toList());
-        SingleTagDto[] tags = new SingleTagDto[collect1.size()];
-        tags = collect1.toArray(tags);
+
+        SingleTagDto[] tags = new SingleTagDto[tagDtoList.size()];
+        tags = tagDtoList.toArray(tags);
         return new TagsResponse(tags);
     }
 }

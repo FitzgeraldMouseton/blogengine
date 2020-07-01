@@ -13,20 +13,22 @@ import java.util.Base64;
 public class RestoreCodeValidator implements ConstraintValidator<CodeNotExpiredConstraint, String> {
 
    @Value("${restorecode.expiration.time}")
-   private Integer restoreCodeExistenceTime;
+   private Integer restoreCodeExpirationTime;
+   @Value("${restore_code.code_length}")
+   private int restoreCodeLength;
 
    public void initialize(CodeNotExpiredConstraint constraint) {
    }
 
-   public boolean isValid(String code, ConstraintValidatorContext context) {
-      if (code == null || code.isEmpty()){
+   public boolean isValid(final String code, final ConstraintValidatorContext context) {
+      if (code == null || code.isEmpty()) {
          return false;
       }
-      String encodedTime = code.substring(40);
+      String encodedTime = code.substring(restoreCodeLength);
       String decodedTime = new String(Base64.getDecoder().decode(encodedTime));
       long time = Long.parseLong(decodedTime);
       Instant currentTime = Instant.now();
       Instant codeTime = Instant.ofEpochMilli(time);
-      return currentTime.isBefore(codeTime.plusSeconds(restoreCodeExistenceTime));
+      return currentTime.isBefore(codeTime.plusSeconds(restoreCodeExpirationTime));
    }
 }

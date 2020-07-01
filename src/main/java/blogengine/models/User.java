@@ -1,16 +1,15 @@
 package blogengine.models;
 
+import blogengine.models.postconstants.UserConstraints;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "users")
-public class User{
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +34,7 @@ public class User{
     private LocalDateTime regTime;
 
     @NotNull
+    @Size(min = UserConstraints.MIN_USER_NAME_LENGTH)
     private String name;
 
     @NotNull
@@ -42,6 +42,7 @@ public class User{
     private String email;
 
     @NotNull
+    @Size(min = UserConstraints.MIN_PASSWORD_LENGTH)
     private String password;
 
     private String code;
@@ -64,17 +65,17 @@ public class User{
     private List<Comment> comments = new ArrayList<>();
 
 
-    public void addPost(Post post){
+    public void addPost(final Post post) {
         this.posts.add(post);
         post.setUser(this);
     }
 
-    public void addVote(Vote vote){
+    public void addVote(final Vote vote) {
         this.votes.add(vote);
         vote.setUser(this);
     }
 
-    public void addComment(Comment comment){
+    public void addComment(final Comment comment) {
         this.comments.add(comment);
         comment.setUser(this);
     }

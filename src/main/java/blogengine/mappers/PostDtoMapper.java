@@ -1,12 +1,14 @@
 package blogengine.mappers;
 
+import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.Tag;
 import blogengine.models.Vote;
 import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
-import blogengine.services.TagService;
+import blogengine.models.postconstants.PostConstraints;
+import blogengine.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,12 +27,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostDtoMapper {
 
-    private DateTimeFormatter dateFormat;
     private final UserDtoMapper userDtoMapper;
     private final CommentDtoMapper commentDtoMapper;
-    private final TagService tagService;
+    private final UserService userService;
 
-    public PostDto postToPostDto(Post post){
+    private DateTimeFormatter dateFormat;
+
+    public PostDto postToPostDto(final Post post) {
         dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
         PostDto postDto = new PostDto();
         Pair<Integer, Integer> votes = getVoteCount(post);
@@ -44,7 +49,7 @@ public class PostDtoMapper {
         return postDto;
     }
 
-    public PostDto singlePostToPostDto(Post post){
+    public PostDto singlePostToPostDto(final Post post) {
         PostDto postDTO = postToPostDto(post);
         postDTO.setText(post.getText());
         postDTO.setComments(post.getComments().stream()
@@ -53,19 +58,22 @@ public class PostDtoMapper {
         return postDTO;
     }
 
-    public void addPostRequestToPost(AddPostRequest request, Post post){
+    public Post addPostRequestToPost(final AddPostRequest request) {
         dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        Post post = new Post();
+        post.setUser(userService.getCurrentUser());
         post.setTitle(request.getTitle());
         post.setText(request.getText());
         LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
         post.setTime(requestTime);
         post.setActive(request.isActive());
-        Set<Tag> tags = request.getTagNames().stream()
-                .map(tagName -> tagService.findTagByName(tagName).orElse(new Tag(tagName))).collect(Collectors.toSet());
+        post.setModerationStatus(ModerationStatus.NEW);
+        Set<Tag> tags = new HashSet<>(Arrays.asList(request.getTagNames()));
         post.addTags(tags);
+        return post;
     }
 
-    public ModerationResponse postToModerationResponse(Post post){
+    public ModerationResponse postToModerationResponse(final Post post) {
         dateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd, HH:mm");
         ModerationResponse response = new ModerationResponse();
         response.setId(post.getId());
@@ -76,14 +84,15 @@ public class PostDtoMapper {
         return response;
     }
 
-    private String getAnnounce(Post post){
+    private String getAnnounce(final Post post) {
         String announce = Jsoup.parse(post.getText()).text();
-        announce = (announce.length() > 400) ? announce.substring(0, 400) : announce;
+        announce = (announce.length() > PostConstraints.ANNOUNCE_LENGTH)
+                ? announce.substring(0, PostConstraints.ANNOUNCE_LENGTH) : announce;
         announce = (announce.matches(".*[.,?!]")) ? announce + ".." : announce + "...";
         return announce;
     }
 
-    private Pair<Integer, Integer> getVoteCount(Post post){
+    private Pair<Integer, Integer> getVoteCount(final Post post) {
         int likesCount = 0;
         int dislikeCount = 0;
         for (Vote vote: post.getVotes()){
@@ -95,11 +104,11 @@ public class PostDtoMapper {
         return Pair.of(likesCount, dislikeCount);
     }
 
-    private int getLikesCount(Pair<Integer, Integer> votes){
+    private int getLikesCount(final Pair<Integer, Integer> votes) {
         return votes.getFirst();
     }
 
-    private int getDislikesCount(Pair<Integer, Integer> votes){
+    private int getDislikesCount(final Pair<Integer, Integer> votes) {
         return votes.getSecond();
     }
 }

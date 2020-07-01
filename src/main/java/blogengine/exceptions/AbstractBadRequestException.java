@@ -6,5 +6,7 @@ public abstract class AbstractBadRequestException extends RuntimeException {
         super(message);
     }
 
-    public abstract String getSourceOfException();
+    public String prefix() {
+        return "message";
+    }
 }

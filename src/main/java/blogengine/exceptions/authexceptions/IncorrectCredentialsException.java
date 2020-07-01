@@ -4,12 +4,8 @@ import blogengine.exceptions.AbstractBadRequestException;
 
 public class IncorrectCredentialsException extends AbstractBadRequestException {
 
-    public IncorrectCredentialsException(String message) {
+    public IncorrectCredentialsException(final String message) {
         super(message);
     }
 
-    @Override
-    public String getSourceOfException() {
-        return "message";
-    }
 }

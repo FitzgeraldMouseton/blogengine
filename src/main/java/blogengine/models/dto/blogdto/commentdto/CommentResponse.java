@@ -6,7 +6,7 @@ import lombok.Data;
 public class CommentResponse {
     private int id;
 
-    public CommentResponse(int id) {
+    public CommentResponse(final int id) {
         this.id = id;
     }
 }

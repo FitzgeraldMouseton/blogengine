@@ -5,6 +5,7 @@ import blogengine.services.CaptchaService;
 import blogengine.util.validation.constraints.CaptchaNotExpiredConstraint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -15,6 +16,8 @@ import java.time.LocalDateTime;
 public class CaptchaExpirationValidator implements ConstraintValidator<CaptchaNotExpiredConstraint, String> {
 
     private final CaptchaService captchaService;
+    @Value("${captcha.expiration.time}")
+    private int captchaExpirationTime;
 
     @Override
     public void initialize(CaptchaNotExpiredConstraint constraintAnnotation) {
@@ -23,10 +26,9 @@ public class CaptchaExpirationValidator implements ConstraintValidator<CaptchaNo
 
     @Override
     public boolean isValid(String captcha, ConstraintValidatorContext constraintValidatorContext) {
-
         CaptchaCode captchaCode = captchaService.findByCode(captcha);
-        if (captchaCode != null){
-            return captchaCode.getTime().plusSeconds(3600).isAfter(LocalDateTime.now());
+        if (captchaCode != null) {
+            return captchaCode.getTime().plusSeconds(captchaExpirationTime).isAfter(LocalDateTime.now());
         }
         return false;
     }

@@ -4,9 +4,11 @@ import blogengine.models.User;
 import blogengine.repositories.UserRepository;
 import blogengine.util.SessionStorage;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UserService {
@@ -14,29 +16,27 @@ public class UserService {
     private final UserRepository userRepository;
     private SessionStorage sessionStorage;
 
-    User findById(Integer id){
+    User findById(final Integer id) {
         return userRepository.findById(id).orElse(null);
     }
 
-    public User findByEmail(String email){
+    public User findByEmail(final String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    User findByCode(String code){
+    User findByCode(final String code) {
         return userRepository.findByCode(code).orElse(null);
     }
 
-    User getModerator(){
-        return userRepository.getModerator().orElse(null);
-    }
-
-    public void save(User user){
+    public void save(final User user) {
         userRepository.save(user);
     }
 
-    User getCurrentUser(){
+    public User getCurrentUser() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (sessionStorage.getSessions().size() == 0){
+        if (sessionStorage.getSessions().size() == 0) {
+            log.info("SessionStorage size: " + sessionStorage.getSessions().size());
+            sessionStorage.getSessions().forEach((k, v) -> log.info(k + ": " + v));
             return null;
         }
         Integer userId = sessionStorage.getSessions().get(sessionId);

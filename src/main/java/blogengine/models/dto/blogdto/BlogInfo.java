@@ -1,6 +1,7 @@
 package blogengine.models.dto.blogdto;
 
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -9,13 +10,16 @@ import java.io.Serializable;
 @Component
 public class BlogInfo implements Serializable {
 
-    private final String title = "DevPub";
-    private final String subtitle = "Рассказы разработчиков";
-    private final String phone = "+7 903 666-44-55";
-    private final String email = "mail@mail.ru";
-    private final String copyright = "Дмитрий Сергеев";
-    private final String copyrightForm = "2005";
-
-    public BlogInfo() {
-    }
+    @Value("${blog_info.title}")
+    private String title;
+    @Value("${blog_info.subtitle}")
+    private String subtitle;
+    @Value("${blog_info.phone}")
+    private String phone;
+    @Value("${blog_info.email}")
+    private String email;
+    @Value("${blog_info.copyright}")
+    private String copyright;
+    @Value("${blog_info.copyright_form}")
+    private String copyrightForm;
 }

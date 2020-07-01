@@ -4,12 +4,7 @@ import blogengine.exceptions.AbstractBadRequestException;
 
 public class UserNotFoundException extends AbstractBadRequestException {
 
-    public UserNotFoundException(String message){
+    public UserNotFoundException(final String message) {
         super(message);
-    }
-
-    @Override
-    public String getSourceOfException() {
-        return "message";
     }
 }

@@ -24,20 +24,19 @@ public class BlogEngineApplication {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public ThreadPoolTaskScheduler threadPoolTaskScheduler(){
-        ThreadPoolTaskScheduler threadPoolTaskScheduler
-                = new ThreadPoolTaskScheduler();
-        threadPoolTaskScheduler.setPoolSize(5);
-        threadPoolTaskScheduler.setThreadNamePrefix(
-                "ThreadPoolTaskScheduler");
-        threadPoolTaskScheduler.initialize();
-        return threadPoolTaskScheduler;
-    }
+//    @Bean
+//    public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+//        ThreadPoolTaskScheduler threadPoolTaskScheduler
+//                = new ThreadPoolTaskScheduler();
+//        threadPoolTaskScheduler.setPoolSize(5);
+//        threadPoolTaskScheduler.setThreadNamePrefix(
+//                "ThreadPoolTaskScheduler");
+//        threadPoolTaskScheduler.initialize();
+//        return threadPoolTaskScheduler;
+//    }
 
     @Bean
     public CommonsMultipartResolver multipartResolver() {
-
         CommonsMultipartResolver cmr = new CommonsMultipartResolver();
         int maxUploadSizeInMb = 5 * 1024 * 1024;
         //cmr.setMaxUploadSize(maxUploadSizeInMb * 2);
