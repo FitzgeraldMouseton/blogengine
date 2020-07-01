@@ -95,7 +95,7 @@ public class PostDtoMapper {
     private Pair<Integer, Integer> getVoteCount(final Post post) {
         int likesCount = 0;
         int dislikeCount = 0;
-        for (Vote vote: post.getVotes()){
+        for (Vote vote: post.getVotes()) {
             if (vote.getValue() == 1)
                 likesCount++;
             else

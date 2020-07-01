@@ -40,7 +40,7 @@ public class ApiPostController {
     }
 
     @GetMapping("/{id}")
-    public PostDto getPostById(@PathVariable Integer id){
+    public PostDto getPostById(@PathVariable Integer id) {
         try {
             return postService.findValidPostById(id);
         } catch (UserNotFoundException e) {

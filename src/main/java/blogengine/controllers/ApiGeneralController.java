@@ -90,17 +90,17 @@ public class ApiGeneralController {
     }
 
     @GetMapping("settings")
-    public Map<String, Boolean> getSettings(){
+    public Map<String, Boolean> getSettings() {
         return generalService.getSettings();
     }
 
     @PutMapping("settings")
-    public void changeSettings(@RequestBody Map<String, Boolean> request){
+    public void changeSettings(@RequestBody Map<String, Boolean> request) {
         generalService.changeSettings(request);
     }
 
     @DeleteMapping
-    public void deleteCaptcha(@RequestParam final String code){
+    public void deleteCaptcha(@RequestParam final String code) {
         CaptchaCode captchaCode = captchaService.findBySecretCode(code);
         captchaService.delete(captchaCode);
     }

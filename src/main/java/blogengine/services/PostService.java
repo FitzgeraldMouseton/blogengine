@@ -66,7 +66,7 @@ public class PostService {
         return postRepository.findFirstByOrderByTime().orElse(null);
     }
 
-    public int countPostsForModeration(User moderator) {
+    public int countPostsForModeration(final User moderator) {
         return postRepository.countPostsForModeration(moderator);
     }
 
@@ -127,7 +127,7 @@ public class PostService {
 
     public PostsInfoRequest<ModerationResponse> postsForModeration(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
-        if(user.isModerator()){
+        if(user.isModerator()) {
             long count;
             List<Post> posts;
             Pageable pageable = PageRequest.of(offset/limit, limit);

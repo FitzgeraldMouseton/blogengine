@@ -10,17 +10,17 @@ import javax.validation.constraints.Size;
 @Data
 public class AddPostRequest {
 
-    private String time;
+    private final String time;
 
     @JsonProperty("active")
-    private boolean isActive;
+    private final boolean isActive;
 
     @Size(min = PostConstraints.MIN_TITLE_SIZE, message = "Заголовок не установлен")
-    private String title;
+    private final String title;
 
     @Size(min = PostConstraints.MIN_TEXT_SIZE, message = "Текст публикации слишком короткий")
-    private String text;
+    private final String text;
 
     @JsonProperty("tags")
-    private Tag[] tagNames;
+    private final Tag[] tagNames;
 }

@@ -61,7 +61,14 @@ blog_info:
 image:
   crop_height: 36
   crop_width: 36
+  max_size: 5242880
 
+location:
+  avatars: "avatars/"
+  images: "images/"
+
+tag:
+  min_weight: 0.1
 
 
 

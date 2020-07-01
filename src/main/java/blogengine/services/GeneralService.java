@@ -45,8 +45,6 @@ public class GeneralService {
     private final SettingService settingService;
 
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final String POST_IMAGE_LOCATION = "uploads/";
-    private static final String USER_AVATAR_LOCATION = "avatars/";
     private static final int FOLDER_NAME_LENGTH = 4;
     private static final int NUMBER_OF_FOLDER_IN_IMAGE_PATH = 3;
 
@@ -56,6 +54,10 @@ public class GeneralService {
     private int cropHeight;
     @Value("${password.min_length}")
     private int passwordMinLength;
+    @Value("${location.images}")
+    private String imagesLocation;
+    @Value("${location.avatars}")
+    private String avatarsLocation;
 
     public void moderation(final ModerationRequest request) {
         Post post = postService.findPostById(request.getPostId());
@@ -115,7 +117,7 @@ public class GeneralService {
         return calendarDto;
     }
 
-    public Map<String, Boolean> getSettings(){
+    public Map<String, Boolean> getSettings() {
         Map<String, Boolean> response = new HashMap<>();
         User currentUser = userService.getCurrentUser();
         if (currentUser != null && currentUser.isModerator()) {
@@ -133,7 +135,7 @@ public class GeneralService {
         if (currentUser != null && currentUser.isModerator()) {
             request.keySet().forEach(k -> {
                 GlobalSetting setting = settingService.getSettingByCode(k);
-                if (setting == null){
+                if (setting == null) {
                     setting = settingService.setSetting(k, request.get(k));
                 } else {
                     setting.setValue(request.get(k));
@@ -150,6 +152,7 @@ public class GeneralService {
         User user = getEditedUser(request);
         String photo = uploadUserAvatar(file);
         user.setPhoto(photo);
+        log.info("Image size: " + file.getSize());
         userService.save(user);
         return new SimpleResponseDto(true);
     }
@@ -160,7 +163,7 @@ public class GeneralService {
     }
 
     public String uploadPostImage(final MultipartFile image) throws IOException {
-        return uploadImage(image, POST_IMAGE_LOCATION);
+        return uploadImage(image, imagesLocation);
     }
 
     private String uploadUserAvatar(final MultipartFile image) throws IOException {
@@ -173,7 +176,7 @@ public class GeneralService {
             BufferedImage resizedImage = resizeImage(preliminaryResizedImage,
                                             cropWidth, cropHeight, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-            path = getPathForUpload(USER_AVATAR_LOCATION);
+            path = getPathForUpload(avatarsLocation);
             path = path + image.getOriginalFilename();
             File newFile = new File(path);
             ImageIO.write(resizedImage, "jpg", newFile);
@@ -193,8 +196,8 @@ public class GeneralService {
     private void removeUserAvatar(final User user) {
 
         String pathToPhoto = user.getPhoto();
-        int startIndex = pathToPhoto.indexOf(USER_AVATAR_LOCATION);
-        int endIndex = pathToPhoto.indexOf("/", USER_AVATAR_LOCATION.length() + 1);
+        int startIndex = pathToPhoto.indexOf(avatarsLocation);
+        int endIndex = pathToPhoto.indexOf("/", avatarsLocation.length() + 1);
         Path path = Path.of(pathToPhoto.substring(startIndex, endIndex));
         try {
             Files.walkFileTree(path, new SimpleFileVisitor<>() {

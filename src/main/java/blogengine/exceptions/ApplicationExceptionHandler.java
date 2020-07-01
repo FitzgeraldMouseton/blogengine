@@ -2,17 +2,15 @@ package blogengine.exceptions;
 
 import blogengine.models.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileUploadBase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @RestControllerAdvice
@@ -33,6 +31,13 @@ public class ApplicationExceptionHandler {
                 .getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    }
+
+    @ExceptionHandler(FileUploadBase.FileSizeLimitExceededException.class)
+    public final ResponseEntity<ErrorResponse> handleFileSizeLimitExceededException(final FileUploadBase.FileSizeLimitExceededException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(ex.getFieldName(), ex.getLocalizedMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
     }
 }
