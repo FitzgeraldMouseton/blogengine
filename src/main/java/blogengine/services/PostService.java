@@ -154,8 +154,6 @@ public class PostService {
     }
 
     public PostsInfoRequest<PostDto> findAllByQuery(final int offset, final int limit, final String query) {
-
-        log.info("trig");
         log.info(query);
         Pageable pageable = PageRequest.of(offset/limit, limit);
         List<Post> posts = query == null ? postRepository.getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable)

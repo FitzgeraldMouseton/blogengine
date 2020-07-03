@@ -123,7 +123,7 @@ public class GeneralService {
     public Map<String, Boolean> getSettings() {
         Map<String, Boolean> response = new HashMap<>();
         User currentUser = userService.getCurrentUser();
-        if (currentUser != null && currentUser.isModerator()) {
+        if (currentUser != null) {
             List<GlobalSetting> settings = settingService.getSettings();
             if (settings.isEmpty()) {
                 settingService.fillSettings();
