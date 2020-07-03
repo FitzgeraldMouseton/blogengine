@@ -65,7 +65,7 @@ image:
 
 location:
   avatars: "avatars/"
-  images: "images/"
+  images: "uploads/"
 
 tag:
   min_weight: 0.1
