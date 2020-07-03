@@ -62,10 +62,12 @@ image:
   crop_height: 36
   crop_width: 36
   max_size: 5242880
+  max_height: 400
+  max_width: 400
 
 location:
   avatars: "avatars/"
-  images: "images/"
+  images: "uploads/"
 
 tag:
   min_weight: 0.1

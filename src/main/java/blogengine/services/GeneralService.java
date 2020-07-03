@@ -48,6 +48,10 @@ public class GeneralService {
     private static final int FOLDER_NAME_LENGTH = 4;
     private static final int NUMBER_OF_FOLDER_IN_IMAGE_PATH = 3;
 
+    @Value("${image.max_width}")
+    private int maxWidth;
+    @Value("${image.max_height}")
+    private int maxHeight;
     @Value("${image.crop_width}")
     private int cropWidth;
     @Value("${image.crop_height}")
@@ -187,11 +191,10 @@ public class GeneralService {
     }
 
     private String uploadImage(final MultipartFile image, final String imagesRootFolder) throws IOException {
+
         String pathToImage = getPathForUpload(imagesRootFolder);
-        byte[] bytes = image.getBytes();
         pathToImage += image.getOriginalFilename();
-        Path path = Path.of(pathToImage);
-        Files.write(path, bytes);
+        image.transferTo(Path.of(pathToImage));
         return "/" + pathToImage;
     }
 
