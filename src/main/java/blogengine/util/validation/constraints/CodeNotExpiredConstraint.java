@@ -1,6 +1,7 @@
 package blogengine.util.validation.constraints;
 
 import blogengine.util.validation.validators.RestoreCodeValidator;
+import org.springframework.core.annotation.Order;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

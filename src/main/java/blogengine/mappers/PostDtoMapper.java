@@ -8,6 +8,7 @@ import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.postconstants.PostConstraints;
+import blogengine.services.TagService;
 import blogengine.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +29,7 @@ public class PostDtoMapper {
     private final UserDtoMapper userDtoMapper;
     private final CommentDtoMapper commentDtoMapper;
     private final UserService userService;
+    private final TagService tagService;
 
     private DateTimeFormatter dateFormat;
 
@@ -65,10 +65,15 @@ public class PostDtoMapper {
         post.setTitle(request.getTitle());
         post.setText(request.getText());
         LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
-        post.setTime(requestTime);
+        LocalDateTime postTime = requestTime.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : requestTime;
+        post.setTime(postTime);
         post.setActive(request.isActive());
         post.setModerationStatus(ModerationStatus.NEW);
-        Set<Tag> tags = new HashSet<>(Arrays.asList(request.getTagNames()));
+        Set<Tag> tags = request.getTagNames().stream()
+                .map(tagName -> {
+                    tagName = tagName.toUpperCase();
+                    return tagService.findTagByName(tagName).orElse(new Tag(tagName));
+                }).collect(Collectors.toSet());
         post.addTags(tags);
         return post;
     }

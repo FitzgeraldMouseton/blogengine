@@ -22,11 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,18 +37,20 @@ public class PostService {
     private final CommentService commentService;
     private final VoteService voteService;
     private final SettingService settingService;
+    private final TagService tagService;
 
     //================================= Methods for working with repository =======================
 
-    Post findPostById(final Integer id) {
+    public Post findPostById(final Integer id) {
         return postRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Не найден пост с id " + id));
     }
 
-    List<Post> getAllPots() {
+    public List<Post> getAllPots() {
         return postRepository.findAllBy();
     }
 
     public void save(final Post post) {
+        post.getTags().forEach(tag -> log.info("Save: " + tag.getName() + ": " + tag));
         postRepository.save(post);
     }
 
@@ -193,25 +193,40 @@ public class PostService {
             throw new NotEnoughPrivilegesException("Публиковать посты может только модератор");
         } else {
             Post post = postDtoMapper.addPostRequestToPost(request);
-            checkPostParameters(post.getTime());
             postRepository.save(post);
             return new SimpleResponseDto(true);
         }
     }
 
     public SimpleResponseDto editPost(final int id, final AddPostRequest request) {
-        User currentUser = userService.getCurrentUser();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Post post = findPostById(id);
-        postDtoMapper.addPostRequestToPost(request);
-        checkPostParameters(post.getTime());
-//        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-//        if (post.getTime().isBefore(currentTime)){
-//            post.setTime(currentTime);
-//        }
-        if (!currentUser.isModerator()) {
+        User user = userService.getCurrentUser();
+        post.setUser(user);
+        post.setTitle(request.getTitle());
+        post.setText(request.getText());
+        LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
+        LocalDateTime postTime = requestTime.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : requestTime;
+        post.setTime(postTime);
+        post.setActive(request.isActive());
+        if (!user.isModerator()) {
             post.setModerationStatus(ModerationStatus.NEW);
         }
-        postRepository.save(post);
+        Set<Tag> tags = request.getTagNames().stream()
+                .map(tagName -> {
+                    tagName = tagName.toUpperCase();
+                    Tag tag;
+                    Optional<Tag> tagOptional = tagService.findTagByName(tagName);
+                    if (tagOptional.isEmpty()){
+                        tag = new Tag(tagName);
+                        tagService.save(tag);
+                    } else {
+                        tag = tagOptional.get();
+                    }
+                    return tag;
+                }).collect(Collectors.toSet());
+        post.addTags(tags);
+        save(post);
         return new SimpleResponseDto(true);
     }
 
@@ -274,12 +289,5 @@ public class PostService {
             postDtos.add(postDTO);
         });
         return postDtos;
-    }
-
-    public void checkPostParameters(final LocalDateTime time) {
-        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        if (time.isBefore(currentTime)) {
-            throw new IllegalArgumentException("Неправильная дата");
-        }
     }
 }

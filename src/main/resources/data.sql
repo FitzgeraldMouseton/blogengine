@@ -176,11 +176,11 @@ Insert into post_votes(id, time, value, post_id, user_id) values
 
 Insert into tags(id, name) values
 (1, 'книга'),
-(2, 'хэмингуэй'),
-(3, 'успенский'),
-(4, 'маркес'),
-(5, 'о\'коннор'),
-(6, 'кафка');
+(2, 'ХЭМИНГУЭЙ'),
+(3, 'УСПЕНСКИЙ'),
+(4, 'МАРКЕС'),
+(5, 'О\'КОННОР'),
+(6, 'КАФКА');
 
 Insert into posts_tags(posts_id, tags_id) values
 (1, 2),

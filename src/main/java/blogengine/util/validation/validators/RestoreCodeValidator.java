@@ -12,7 +12,7 @@ import java.util.Base64;
 @Slf4j
 public class RestoreCodeValidator implements ConstraintValidator<CodeNotExpiredConstraint, String> {
 
-   @Value("${restorecode.expiration.time}")
+   @Value("${restore_code.expiration_time}")
    private Integer restoreCodeExpirationTime;
    @Value("${restore_code.code_length}")
    private int restoreCodeLength;

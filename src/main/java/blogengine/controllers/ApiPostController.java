@@ -72,7 +72,7 @@ public class ApiPostController {
 
     @PutMapping("{id}")
     public ResponseEntity<?> editPost(@PathVariable final int id, @Valid @RequestBody final AddPostRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.editPost(id, request));
+        return ResponseEntity.status(HttpStatus.OK).body(postService.editPost(id, request));
     }
 
     @PostMapping("like")

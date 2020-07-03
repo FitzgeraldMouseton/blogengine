@@ -95,6 +95,7 @@ public class AuthService {
     }
 
     public SimpleResponseDto setNewPassword(final SetPassRequest request) {
+        log.info("trig");
         String code = request.getCode();
         User user = userService.findByCode(code);
         user.setPassword(encoder.encode(request.getPassword()));

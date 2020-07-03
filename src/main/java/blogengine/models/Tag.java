@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Data
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @Table(name = "tags")
 public class Tag {
 
@@ -26,7 +26,15 @@ public class Tag {
     @JsonIgnore
     private Set<Post> posts = new HashSet<>();
 
-    public Tag(@NotNull String name) {
+    public Tag(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Tag{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

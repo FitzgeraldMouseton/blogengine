@@ -60,10 +60,13 @@ public class GeneralService {
     private String avatarsLocation;
 
     public void moderation(final ModerationRequest request) {
+        User moderator = userService.getCurrentUser();
         Post post = postService.findPostById(request.getPostId());
         if ("decline".equals(request.getDecision())) {
             post.setModerationStatus(ModerationStatus.DECLINE);
+            post.setModerator(moderator);
         } else if ("accept".equals(request.getDecision())) {
+            post.setModerator(moderator);
             post.setModerationStatus(ModerationStatus.ACCEPTED);
         }
         postService.save(post);
@@ -152,7 +155,6 @@ public class GeneralService {
         User user = getEditedUser(request);
         String photo = uploadUserAvatar(file);
         user.setPhoto(photo);
-        log.info("Image size: " + file.getSize());
         userService.save(user);
         return new SimpleResponseDto(true);
     }
@@ -166,31 +168,31 @@ public class GeneralService {
         return uploadImage(image, imagesLocation);
     }
 
+    // ================================== Additional methods =========================================
+
     private String uploadUserAvatar(final MultipartFile image) throws IOException {
         BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
-        String path = null;
+        String path = getPathForUpload(avatarsLocation);
+        path += image.getOriginalFilename();
+        File newFile = new File(path);
         if (bufferedImage.getHeight() > cropHeight || bufferedImage.getWidth() > cropHeight) {
 
             BufferedImage preliminaryResizedImage = resizeImage(bufferedImage, cropWidth * 2,
                                     cropHeight * 2, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            BufferedImage resizedImage = resizeImage(preliminaryResizedImage,
+            bufferedImage = resizeImage(preliminaryResizedImage,
                                             cropWidth, cropHeight, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-
-            path = getPathForUpload(avatarsLocation);
-            path = path + image.getOriginalFilename();
-            File newFile = new File(path);
-            ImageIO.write(resizedImage, "jpg", newFile);
         }
+        ImageIO.write(bufferedImage, "jpg", newFile);
         return "/" + path;
     }
 
-    private String uploadImage(final MultipartFile image, String imageLocation) throws IOException {
-        imageLocation = getPathForUpload(imageLocation);
+    private String uploadImage(final MultipartFile image, final String imagesRootFolder) throws IOException {
+        String pathToImage = getPathForUpload(imagesRootFolder);
         byte[] bytes = image.getBytes();
-        imageLocation += image.getOriginalFilename();
-        Path path = Path.of(imageLocation);
+        pathToImage += image.getOriginalFilename();
+        Path path = Path.of(pathToImage);
         Files.write(path, bytes);
-        return "/" + imageLocation;
+        return "/" + pathToImage;
     }
 
     private void removeUserAvatar(final User user) {
@@ -215,7 +217,7 @@ public class GeneralService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        user.setPhoto("");
+        user.setPhoto(null);
         userService.save(user);
     }
 
@@ -235,7 +237,7 @@ public class GeneralService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         String password = request.getPassword();
-        if (request.getRemovePhoto() == 1 && !user.getPhoto().isEmpty()) {
+        if (request.getRemovePhoto() == 1 && user.getPhoto() != null) {
             removeUserAvatar(user);
         }
         if (password != null && password.length() >= passwordMinLength) {

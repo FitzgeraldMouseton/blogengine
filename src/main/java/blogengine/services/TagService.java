@@ -27,6 +27,10 @@ public class TagService {
         tagRepository.save(tag);
     }
 
+    public Optional<Tag> findTagByName(String name) {
+        return tagRepository.findTagByName(name);
+    }
+
     public TagsResponse findTagsByName(final String query) {
         List<Tag> tagList = (query == null) ? tagRepository.findAllByEmptyQuery()
                 : tagRepository.findAllByNameStartingWith(query);

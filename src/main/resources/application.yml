@@ -27,10 +27,10 @@ spring:
 
 restore_code:
   code_length: 40
-  expiration_time: 60
+  expiration_time: 3600
 captcha:
   expiration:
-    time: 10
+    time: 3600
   text_size: 15
   frame_width: 100
   frame_height: 40
