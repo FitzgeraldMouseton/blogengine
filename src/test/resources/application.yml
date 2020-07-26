@@ -1,33 +1,26 @@
 spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:blog
+    initialization-mode: always
+
+  h2:
+    console:
+      enabled: true
+
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5Dialect
-  datasource:
-    url: ${DB_URL}
-    username: root
-    password: password
-    initialization-mode: always
-#    driver-class-name: org.h2.Driver
-#    url: jdbc:h2:mem:blog
+        dialect: org.hibernate.dialect.H2Dialect
+
   mail:
     host: smtp.yandex.ru
     username: ${EMAIL}
     password: ${PASSWORD}
     port: 465
     protocol: smtps
-
-
-  servlet:
-    multipart:
-      max-file-size: 5MB
-      enabled: false
-
-  jackson:
-    time-zone: UTC
-
 
 #========================= App variables ============================
 
@@ -57,7 +50,6 @@ setting:
   multiuser: MULTIUSER_MODE
   premoderation: POST_PREMODERATION
 
-
 blog_info:
   title: "DevPub"
   subtitle: "Рассказы разработчиков"
@@ -79,22 +71,3 @@ location:
 
 tag:
   min_weight: 0.1
-
-
-
-
-
-
-
-
-
-
-
-
-
-#errormessages:
-#  captcha: 'Код с картинки введён неверно'
-#  name: 'Имя указано неверно'
-#  user:
-#    notfound: 'Не найден пользователь с таким адресом почты'
-#    exists: 'Этот e-mail уже зарегистрирован'

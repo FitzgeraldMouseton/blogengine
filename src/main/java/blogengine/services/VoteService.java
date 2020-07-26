@@ -1,11 +1,14 @@
 package blogengine.services;
 
+import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.Post;
 import blogengine.models.User;
 import blogengine.models.Vote;
 import blogengine.repositories.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,6 +19,7 @@ import java.time.LocalDateTime;
 public class VoteService {
 
     private final VoteRepository voteRepository;
+    private final UserService userService;
 
     private static final byte LIKE = 1;
     private static final byte DISLIKE = -1;
@@ -32,6 +36,14 @@ public class VoteService {
         return voteRepository.countVotesOfUserPosts(user, DISLIKE);
     }
 
+    Long countLikes() {
+        return voteRepository.countAllVotes(LIKE);
+    }
+
+    Long countDislikes() {
+        return voteRepository.countAllVotes(DISLIKE);
+    }
+
     Vote findLike(final Post post, final User user) {
         return voteRepository.findByPostAndUserAndValue(post, user, LIKE).orElse(null);
     }
@@ -44,31 +56,28 @@ public class VoteService {
         voteRepository.delete(vote);
     }
 
-    void setLike(final Post post, final User user) {
-        Vote like =  createVote(post, user, LIKE);
-        log.info(like.toString());
-        voteRepository.save(like);
+    Vote getLike(final Post post, final User user) {
+        return createVote(post, user, LIKE);
     }
 
-    void setDislike(final Post post, final User user) {
-        Vote dislike = createVote(post, user, DISLIKE);
-        log.info(dislike.toString());
-        voteRepository.save(dislike);
+    Vote getDislike(final Post post, final User user) {
+        return createVote(post, user, DISLIKE);
     }
 
     void deleteLikeIfExists(final Post post, final User user) {
         Vote like = findLike(post, user);
-        if (like != null)
-            voteRepository.delete(like);
+        if (like != null) {
+            post.removeVote(like);
+        }
     }
 
     void deleteDislikeIfExists(final Post post, final User user) {
         Vote dislike = findDislike(post, user);
         if (dislike != null)
-            voteRepository.delete(dislike);
+            post.removeVote(dislike);
     }
 
-    private Vote createVote(final Post post, final User user, final byte value) {
+    public Vote createVote(final Post post, final User user, final byte value) {
         Vote vote = new Vote();
         vote.setPost(post);
         vote.setUser(user);

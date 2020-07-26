@@ -1,13 +1,11 @@
 package blogengine.mappers;
 
-import blogengine.models.ModerationStatus;
-import blogengine.models.Post;
-import blogengine.models.Tag;
-import blogengine.models.Vote;
+import blogengine.models.*;
 import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.postconstants.PostConstraints;
+import blogengine.services.SettingService;
 import blogengine.services.TagService;
 import blogengine.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +14,9 @@ import org.jsoup.Jsoup;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,46 +28,54 @@ public class PostDtoMapper {
     private final UserDtoMapper userDtoMapper;
     private final CommentDtoMapper commentDtoMapper;
     private final UserService userService;
+    private final SettingService settingService;
     private final TagService tagService;
 
-    private DateTimeFormatter dateFormat;
-
     public PostDto postToPostDto(final Post post) {
-        dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy, HH:mm");
         PostDto postDto = new PostDto();
-        Pair<Integer, Integer> votes = getVoteCount(post);
-        postDto.setId(post.getId());
-        postDto.setTime(dateFormat.format(post.getTime()));
-        postDto.setTitle(post.getTitle());
-        postDto.setAnnounce(getAnnounce(post));
-        postDto.setLikeCount(getLikesCount(votes));
-        postDto.setDislikeCount(getDislikesCount(votes));
-        postDto.setCommentCount(post.getComments().size());
-        postDto.setViewCount(post.getViewCount());
-        postDto.setUser(userDtoMapper.userToUserDto(post.getUser()));
+        if (post != null) {
+            Pair<Integer, Integer> votes = getVoteCount(post);
+            postDto.setId(post.getId());
+            postDto.setTimestamp(post.getTime().toEpochSecond(ZoneOffset.UTC));
+            postDto.setTitle(post.getTitle());
+            postDto.setAnnounce(getAnnounce(post));
+            postDto.setLikeCount(getLikesCount(votes));
+            postDto.setDislikeCount(getDislikesCount(votes));
+            postDto.setCommentCount(post.getComments().size());
+            postDto.setViewCount(post.getViewCount());
+            postDto.setUser(userDtoMapper.userToUserDto(post.getUser()));
+        }
         return postDto;
     }
 
     public PostDto singlePostToPostDto(final Post post) {
-        PostDto postDTO = postToPostDto(post);
-        postDTO.setText(post.getText());
-        postDTO.setComments(post.getComments().stream()
-                .map(commentDtoMapper::commentToCommentDto).collect(Collectors.toList()));
-        postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));
-        return postDTO;
+        if (post != null) {
+            PostDto postDTO = postToPostDto(post);
+            postDTO.setText(post.getText());
+            postDTO.setComments(post.getComments().stream()
+                    .map(commentDtoMapper::commentToCommentDto).collect(Collectors.toList()));
+            postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));
+            return postDTO;
+        }
+        return null;
     }
 
     public Post addPostRequestToPost(final AddPostRequest request) {
-        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Post post = new Post();
-        post.setUser(userService.getCurrentUser());
+        User user = userService.getCurrentUser();
+        post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
-        LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
-        LocalDateTime postTime = requestTime.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : requestTime;
+        LocalDateTime requestTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(request.getTimestamp()), ZoneOffset.UTC);
+        LocalDateTime postTime = requestTime
+                .isBefore(LocalDateTime.now(ZoneOffset.UTC)) ? LocalDateTime.now(ZoneOffset.UTC) : requestTime;
         post.setTime(postTime);
         post.setActive(request.isActive());
-        post.setModerationStatus(ModerationStatus.NEW);
+        if (!settingService.isPremoderationEnabled() || user.isModerator()) {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        } else {
+            post.setModerationStatus(ModerationStatus.NEW);
+        }
         Set<Tag> tags = request.getTagNames().stream()
                 .map(tagName -> {
                     tagName = tagName.toUpperCase();
@@ -79,10 +86,9 @@ public class PostDtoMapper {
     }
 
     public ModerationResponse postToModerationResponse(final Post post) {
-        dateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd, HH:mm");
         ModerationResponse response = new ModerationResponse();
         response.setId(post.getId());
-        response.setTime(dateFormat.format(post.getTime()));
+        response.setTimestamp(post.getTime().toEpochSecond(ZoneOffset.UTC));
         response.setUser(userDtoMapper.userToUserDto(post.getUser()));
         response.setTitle(post.getTitle());
         response.setAnnounce(getAnnounce(post));

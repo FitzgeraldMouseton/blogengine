@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class PostsInfoRequest<T> {
+public class PostsInfoResponse<T> {
 
     private long count;
     private List<T> posts;

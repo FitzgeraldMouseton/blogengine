@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 public class CommentDtoMapper {
 
     private final UserDtoMapper userDtoMapper;
+
     private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     public CommentDTO commentToCommentDto(Comment comment) {

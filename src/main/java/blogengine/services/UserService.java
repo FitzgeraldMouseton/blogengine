@@ -8,13 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import java.util.Objects;
+
 @Slf4j
 @Service
 @AllArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-    private SessionStorage sessionStorage;
+    private final SessionStorage sessionStorage;
 
     User findById(final Integer id) {
         return userRepository.findById(id).orElse(null);
@@ -34,9 +36,7 @@ public class UserService {
 
     public User getCurrentUser() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (sessionStorage.getSessions().size() == 0) {
-            log.info("SessionStorage size: " + sessionStorage.getSessions().size());
-            sessionStorage.getSessions().forEach((k, v) -> log.info(k + ": " + v));
+        if (!sessionStorage.getSessions().containsKey(sessionId)) {
             return null;
         }
         Integer userId = sessionStorage.getSessions().get(sessionId);

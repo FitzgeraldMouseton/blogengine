@@ -1,12 +1,15 @@
 package blogengine.models.dto.authdto;
 
-import blogengine.util.validation.constraints.CaptchaNotMatchingConstraint;
 import blogengine.util.validation.constraints.CaptchaNotExpiredConstraint;
 import blogengine.util.validation.constraints.CodeNotExpiredConstraint;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SetPassRequest {
 
     private String password;
@@ -14,10 +17,9 @@ public class SetPassRequest {
     @CodeNotExpiredConstraint
     private String code;
 
-    @CaptchaNotMatchingConstraint
-    @CaptchaNotExpiredConstraint
     private String captcha;
 
+    @CaptchaNotExpiredConstraint
     @JsonProperty("captcha_secret")
     private String captchaSecret;
 }

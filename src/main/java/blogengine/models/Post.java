@@ -13,16 +13,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
-@NoArgsConstructor(force = true)
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "posts")
 public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull
@@ -57,10 +58,10 @@ public class Post {
     @Column(name = "view_count")
     private int viewCount;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Vote> votes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.PERSIST)
@@ -71,9 +72,17 @@ public class Post {
         vote.setPost(this);
     }
 
+    public void removeVote(final Vote vote) {
+        this.votes.remove(vote);
+    }
+
     public void addComment(final Comment comment) {
         this.comments.add(comment);
         comment.setPost(this);
+    }
+
+    public void removeComment(final Comment comment) {
+        this.comments.remove(comment);
     }
 
     public void addTag(final Tag tag) {
@@ -112,14 +121,8 @@ public class Post {
     public String toString() {
         return "Post{" +
                 "id=" + id +
-                ", active=" + active +
-                ", moderationStatus=" + moderationStatus +
-                ", user=" + user +
-                ", moderator=" + moderator +
-                ", time=" + time +
+                ", user=" + user.getName() +
                 ", title='" + title + '\'' +
-                ", text='" + text + '\'' +
-                ", viewCount=" + viewCount +
                 '}';
     }
 }

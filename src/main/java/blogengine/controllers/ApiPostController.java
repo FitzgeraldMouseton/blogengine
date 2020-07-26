@@ -1,10 +1,9 @@
 package blogengine.controllers;
 
-import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
-import blogengine.models.dto.blogdto.postdto.PostsInfoRequest;
+import blogengine.models.dto.blogdto.postdto.PostsInfoResponse;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.services.PostService;
 import lombok.RequiredArgsConstructor;
@@ -26,42 +25,41 @@ public class ApiPostController {
     private final PostService postService;
 
     @GetMapping
-    public PostsInfoRequest getPosts(@RequestParam final int offset,
-                                     @RequestParam final int limit,
-                                     @RequestParam final String mode) {
+    public PostsInfoResponse getPosts(@RequestParam final int offset,
+                                      @RequestParam final int limit,
+                                      @RequestParam final String mode) {
         return postService.findPosts(offset, limit, mode);
     }
 
     @GetMapping("/search")
-    public PostsInfoRequest searchPost(@RequestParam final int offset,
-                                       @RequestParam final int limit,
-                                       @RequestParam final String query) {
+    public PostsInfoResponse searchPost(@RequestParam final int offset,
+                                        @RequestParam final int limit,
+                                        @RequestParam final String query) {
         return postService.findAllByQuery(offset, limit, query);
     }
 
     @GetMapping("/{id}")
-    public PostDto getPostById(@PathVariable Integer id) {
-        try {
-            return postService.findValidPostById(id);
-        } catch (UserNotFoundException e) {
-            e.printStackTrace();
+    public ResponseEntity<PostDto> getPostById(@PathVariable Integer id) {
+        final PostDto postDto = postService.findValidPostById(id);
+        if (postDto == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        return null;
+        return ResponseEntity.ok(postDto);
     }
 
     @GetMapping("/byDate")
-    public PostsInfoRequest searchByDate(@RequestParam final int offset,
-                                         @RequestParam final int limit,
-                                         @RequestParam final String date) {
+    public PostsInfoResponse searchByDate(@RequestParam final int offset,
+                                          @RequestParam final int limit,
+                                          @RequestParam final String date) {
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate dateQuery = LocalDate.parse(date, dateFormat);
         return postService.findPostsByDate(offset, limit, dateQuery);
     }
 
     @GetMapping("/byTag")
-    public PostsInfoRequest searchByTag(@RequestParam final int offset,
-                                        @RequestParam final int limit,
-                                        @RequestParam final String tag) {
+    public PostsInfoResponse searchByTag(@RequestParam final int offset,
+                                         @RequestParam final int limit,
+                                         @RequestParam final String tag) {
         return postService.findPostsByTag(offset, limit, tag);
     }
 
@@ -86,16 +84,16 @@ public class ApiPostController {
     }
 
     @GetMapping("/my")
-    public PostsInfoRequest getCurrentUserPosts(@RequestParam final int offset,
-                                                @RequestParam final int limit,
-                                                @RequestParam final String status) {
+    public PostsInfoResponse getCurrentUserPosts(@RequestParam final int offset,
+                                                 @RequestParam final int limit,
+                                                 @RequestParam final String status) {
         return postService.findCurrentUserPosts(offset, limit, status);
     }
 
     @GetMapping("moderation")
-    public PostsInfoRequest getPostsForModeration(@RequestParam final int offset,
-                                                  @RequestParam final int limit,
-                                                  @RequestParam final String status) {
-        return postService.postsForModeration(offset, limit, status);
+    public PostsInfoResponse getPostsForModeration(@RequestParam final int offset,
+                                                   @RequestParam final int limit,
+                                                   @RequestParam final String status) {
+        return postService.findPostsForModeration(offset, limit, status);
     }
 }

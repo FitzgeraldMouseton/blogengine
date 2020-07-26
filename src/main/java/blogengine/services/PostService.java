@@ -1,7 +1,7 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.exceptions.authexceptions.UserNotFoundException;
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
@@ -10,7 +10,7 @@ import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
-import blogengine.models.dto.blogdto.postdto.PostsInfoRequest;
+import blogengine.models.dto.blogdto.postdto.PostsInfoResponse;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,21 +46,28 @@ public class PostService {
         return postRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Не найден пост с id " + id));
     }
 
-    public List<Post> getAllPots() {
-        return postRepository.findAllBy();
+    public List<Post> findAllActivePosts() {
+        return postRepository.findAllByActiveTrue();
+    }
+
+    public long countActivePosts() {
+        return postRepository.countAllByActiveTrue();
     }
 
     public void save(final Post post) {
-        post.getTags().forEach(tag -> log.info("Save: " + tag.getName() + ": " + tag));
         postRepository.save(post);
     }
 
-    Long countUserPosts(final User user) {
+    long countUserPosts(final User user) {
         return postRepository.countAllByUser(user);
     }
 
-    Long countUserPostsViews(final User user) {
+    long countUserPostsViews(final User user) {
         return postRepository.countUserPostsViews(user);
+    }
+
+    long countAllPostsViews() {
+        return postRepository.countAllPostsViews();
     }
 
     Post findFirstPost() {
@@ -72,49 +80,53 @@ public class PostService {
 
     //================================= Main logic methods ==========================================
 
-    public PostsInfoRequest<PostDto> findPosts(final int offset, final int limit, final String mode) {
+    public PostsInfoResponse<PostDto> findPosts(final int offset, final int limit, final String mode) {
 
         List<Post> posts;
         long postsCount = postRepository
-                .countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now());
+                .countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC));
         Pageable pageable = PageRequest.of(offset/limit, limit);
         switch (mode) {
             case "recent":
-                posts = postRepository.getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                posts = postRepository.getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
                 break;
             case "early":
-                posts = postRepository.getEarlyPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                posts = postRepository.getEarlyPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
                 break;
             case "popular":
-                posts = postRepository.getPopularPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                posts = postRepository.getPopularPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
                 break;
             case "best":
-                posts = postRepository.getBestPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable);
+                posts = postRepository.getBestPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
                 break;
             default:
                 throw new IllegalArgumentException("Wrong argument 'mode': " + mode);
         }
 
         List<PostDto> postDtos = getPostDTOs(posts);
-        return new PostsInfoRequest<>(postsCount, postDtos);
+        return new PostsInfoResponse<>(postsCount, postDtos);
     }
 
-    public PostsInfoRequest<PostDto> findCurrentUserPosts(final int offset, final int limit, final String status) {
+    public PostsInfoResponse<PostDto> findCurrentUserPosts(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
         List<Post> posts;
-        long postsCount = postRepository.countAllByUser(user);
+        long postsCount;
         Pageable pageable = PageRequest.of(offset/limit, limit);
         switch (status) {
             case "inactive":
+                postsCount = postRepository.countInactivePostsOfUser(user);
                 posts = postRepository.getCurrentUserInactivePosts(user, pageable);
                 break;
             case "pending":
+                postsCount = postRepository.countActivePostsOfUser(user, ModerationStatus.NEW);
                 posts = postRepository.getCurrentUserActivePosts(user, ModerationStatus.NEW, pageable);
                 break;
             case "declined":
+                postsCount = postRepository.countActivePostsOfUser(user, ModerationStatus.DECLINE);
                 posts = postRepository.getCurrentUserActivePosts(user, ModerationStatus.DECLINE, pageable);
                 break;
             case "published":
+                postsCount = postRepository.countActivePostsOfUser(user, ModerationStatus.ACCEPTED);
                 posts = postRepository.getCurrentUserActivePosts(user, ModerationStatus.ACCEPTED, pageable);
                 break;
             default:
@@ -122,10 +134,10 @@ public class PostService {
         }
 
         List<PostDto> postDtos = getPostDTOs(posts);
-        return new PostsInfoRequest<>(postsCount, postDtos);
+        return new PostsInfoResponse<>(postsCount, postDtos);
     }
 
-    public PostsInfoRequest<ModerationResponse> postsForModeration(final int offset, final int limit, final String status) {
+    public PostsInfoResponse<ModerationResponse> findPostsForModeration(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
         if(user.isModerator()) {
             long count;
@@ -148,41 +160,42 @@ public class PostService {
                     throw new IllegalArgumentException("Wrong argument 'status': " + status);
             }
             List<ModerationResponse> postDtos = getModerationPostDTOs(posts);
-            return new PostsInfoRequest<>(count, postDtos);
+            return new PostsInfoResponse<>(count, postDtos);
         }
         return null;
     }
 
-    public PostsInfoRequest<PostDto> findAllByQuery(final int offset, final int limit, final String query) {
+    public PostsInfoResponse<PostDto> findAllByQuery(final int offset, final int limit, final String query) {
         log.info(query);
         Pageable pageable = PageRequest.of(offset/limit, limit);
         List<Post> posts = query == null ? postRepository.getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(), pageable)
                 : postRepository.findPostsByQuery(ModerationStatus.ACCEPTED, LocalDateTime.now(), query, pageable);
 
         List<PostDto> postDtos = getPostDTOs(posts);
-        return new PostsInfoRequest<>(posts.size(), postDtos);
+        return new PostsInfoResponse<>(posts.size(), postDtos);
     }
 
     public PostDto findValidPostById(final int id) {
         Optional<Post> postOptional = postRepository.getValidPostById(id, ModerationStatus.ACCEPTED, LocalDateTime.now());
-        if (postOptional.isEmpty())
-            throw new UserNotFoundException(String.format("Пост с id = %d не найден", id));
-        Post post = postOptional.get();
-        post.setViewCount(post.getViewCount() + 1);
-        postRepository.save(post);
+        Post post = null;
+        if (postOptional.isPresent()) {
+            post = postOptional.get();
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+        }
         return postDtoMapper.singlePostToPostDto(post);
     }
 
-    public PostsInfoRequest<PostDto> findPostsByDate(final int offset, final int limit, final LocalDate date) {
+    public PostsInfoResponse<PostDto> findPostsByDate(final int offset, final int limit, final LocalDate date) {
         Pageable pageable = PageRequest.of(offset/limit, limit);
         List<Post> posts = postRepository.findPostsByDate(ModerationStatus.ACCEPTED, date.atStartOfDay(), date.atStartOfDay().plusDays(1), pageable);
-        return new PostsInfoRequest<>(posts.size(), getPostDTOs(posts));
+        return new PostsInfoResponse<>(posts.size(), getPostDTOs(posts));
     }
 
-    public PostsInfoRequest<PostDto> findPostsByTag(final int offset, final int limit, final String tag) {
+    public PostsInfoResponse<PostDto> findPostsByTag(final int offset, final int limit, final String tag) {
         Pageable pageable = PageRequest.of(offset/limit, limit);
         List<Post> posts = postRepository.findAllByTag(ModerationStatus.ACCEPTED, LocalDateTime.now(), tag, pageable);
-        return new PostsInfoRequest<>(posts.size(), getPostDTOs(posts));
+        return new PostsInfoResponse<>(posts.size(), getPostDTOs(posts));
     }
 
     public SimpleResponseDto addPost(final AddPostRequest request) {
@@ -197,17 +210,19 @@ public class PostService {
     }
 
     public SimpleResponseDto editPost(final int id, final AddPostRequest request) {
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Post post = findPostById(id);
         User user = userService.getCurrentUser();
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
-        LocalDateTime requestTime = LocalDateTime.parse(request.getTime(), dateFormat);
-        LocalDateTime postTime = requestTime.isBefore(LocalDateTime.now()) ? LocalDateTime.now() : requestTime;
+        LocalDateTime requestTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(request.getTimestamp()), ZoneOffset.UTC);
+        LocalDateTime postTime = requestTime
+                .isBefore(LocalDateTime.now(ZoneOffset.UTC)) ? LocalDateTime.now(ZoneOffset.UTC) : requestTime;
         post.setTime(postTime);
         post.setActive(request.isActive());
-        if (!user.isModerator()) {
+        if (user.isModerator() || settingService.isPremoderationEnabled()) {
+            post.setModerationStatus(ModerationStatus.ACCEPTED);
+        } else {
             post.setModerationStatus(ModerationStatus.NEW);
         }
         Set<Tag> tags = request.getTagNames().stream()
@@ -246,26 +261,38 @@ public class PostService {
     @Transactional
     public SimpleResponseDto likePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException("Для для того, чтобы оценивать посты, вам нужно авторизоваться");
+        }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
-        Vote vote = voteService.findLike(post, user);
-        if (vote != null || post == null) {
+        Vote like = voteService.findLike(post, user);
+        if (like != null || post == null) {
             return new SimpleResponseDto(false);
         }
-        voteService.setLike(post, user);
+        log.info("votes before: " + post.getVotes().size());
+        like = voteService.getLike(post, user);
+        post.addVote(like);
         voteService.deleteDislikeIfExists(post, user);
+        log.info("votes after: " + post.getVotes().size());
         return new SimpleResponseDto(true);
     }
 
     @Transactional
     public SimpleResponseDto dislikePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException("Для для того, чтобы оценивать посты, вам нужно авторизоваться");
+        }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
-        Vote vote = voteService.findDislike(post, user);
-        if (vote != null || post == null) {
+        Vote dislike = voteService.findDislike(post, user);
+        if (dislike != null || post == null) {
             return new SimpleResponseDto(false);
         }
-        voteService.setDislike(post, user);
+        log.info("votes before: " + post.getVotes().size());
+        dislike = voteService.getDislike(post, user);
+        post.addVote(dislike);
         voteService.deleteLikeIfExists(post, user);
+        log.info("votes after: " + post.getVotes().size());
         return new SimpleResponseDto(true);
     }
 

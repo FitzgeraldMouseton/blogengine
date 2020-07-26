@@ -1,9 +1,6 @@
 package blogengine.models;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -11,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Table(name = "captcha_codes")
 public class CaptchaCode {
@@ -23,7 +21,6 @@ public class CaptchaCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull

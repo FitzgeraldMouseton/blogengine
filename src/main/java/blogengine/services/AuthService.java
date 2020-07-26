@@ -1,8 +1,10 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.IncorrectCredentialsException;
+import blogengine.exceptions.authexceptions.InvalidCaptchaCodeException;
 import blogengine.exceptions.authexceptions.UserNotFoundException;
 import blogengine.mappers.UserDtoMapper;
+import blogengine.models.CaptchaCode;
 import blogengine.models.User;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.authdto.*;
@@ -30,6 +32,7 @@ public class AuthService {
 
     private final UserService userService;
     private final EmailServiceImpl emailService;
+    private final CaptchaService captchaService;
     private final SessionStorage sessionStorage;
     private final UserDtoMapper userDtoMapper;
     private final BCryptPasswordEncoder encoder;
@@ -55,13 +58,15 @@ public class AuthService {
         sessionStorage.getSessions().put(sessionId, userId);
         UserLoginResponse loginDto = userDtoMapper.userToLoginResponse(user);
         loginResponse = new AuthenticationResponse(true, loginDto);
-        sessionStorage.getSessions().forEach((k, v) -> log.info(k + ": " + v));
-        log.info(String.valueOf(sessionStorage.getSessions().size()));
         return loginResponse;
     }
 
     @Transactional
     public SimpleResponseDto register(final RegisterRequest registerRequest) {
+        CaptchaCode captchaCode = captchaService.findBySecretCode(registerRequest.getCaptchaSecret());
+        if (!captchaCode.getCode().equals(registerRequest.getCaptcha())) {
+            throw new InvalidCaptchaCodeException("Код с картинки введён неверно");
+        }
         User user = userDtoMapper.registerRequestToUser(registerRequest);
         user.setPassword(encoder.encode(user.getPassword()));
         userService.save(user);
@@ -70,7 +75,7 @@ public class AuthService {
 
     public AuthenticationResponse check() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (!sessionStorage.getSessions().values().isEmpty()) {
+        if (sessionStorage.getSessions().containsKey(sessionId)) {
             int userId = sessionStorage.getSessions().get(sessionId);
             User user = userService.findById(userId);
             UserLoginResponse userDTO = userDtoMapper.userToLoginResponse(user);
@@ -95,7 +100,10 @@ public class AuthService {
     }
 
     public SimpleResponseDto setNewPassword(final SetPassRequest request) {
-        log.info("trig");
+        CaptchaCode captchaCode = captchaService.findBySecretCode(request.getCaptchaSecret());
+        if (!captchaCode.getCode().equals(request.getCaptcha())) {
+            throw new InvalidCaptchaCodeException("Код с картинки введён неверно");
+        }
         String code = request.getCode();
         User user = userService.findByCode(code);
         user.setPassword(encoder.encode(request.getPassword()));
@@ -108,6 +116,7 @@ public class AuthService {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         sessionStorage.getSessions().remove(sessionId);
         request.logout();
+        sessionStorage.getSessions().forEach((k, v) -> log.info("sessionId: " + k + " - " + "userId: " + v));
         return new SimpleResponseDto(true);
     }
 

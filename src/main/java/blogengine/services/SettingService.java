@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,8 @@ public class SettingService {
 
     @Value("${setting.multiuser}")
     private String multiuserSetting;
+    @Value("${setting.premoderation}")
+    private String premoderationSetting;
 
     public List<GlobalSetting> getSettings() {
         return settingsRepository.findAllBy();
@@ -30,7 +33,11 @@ public class SettingService {
     }
 
     public boolean isMultiUserEnabled() {
-        return settingsRepository.findByCode(multiuserSetting).get().getValue();
+        return isSettingEnabled(multiuserSetting);
+    }
+
+    public boolean isPremoderationEnabled() {
+        return isSettingEnabled(premoderationSetting);
     }
 
     GlobalSetting getSettingByCode(final String code) {
@@ -43,5 +50,15 @@ public class SettingService {
 
     GlobalSetting setSetting(final String setting, final Boolean isActive) {
         return new GlobalSetting(setting, settings.get(setting), isActive);
+    }
+
+
+    private boolean isSettingEnabled(String setting) {
+        final Optional<GlobalSetting> settingOptional = settingsRepository.findByCode(setting);
+        if (settingOptional.isPresent()) {
+            return settingOptional.get().getValue();
+        } else {
+            return false;
+        }
     }
 }

@@ -44,7 +44,7 @@ public class GeneralService {
     private final VoteService voteService;
     private final SettingService settingService;
 
-    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final int FOLDER_NAME_LENGTH = 4;
     private static final int NUMBER_OF_FOLDER_IN_IMAGE_PATH = 3;
 
@@ -78,38 +78,29 @@ public class GeneralService {
 
     public StatisticsDto getCurrentUserStatistics() {
         User user = userService.getCurrentUser();
-        Long postsCount = postService.countUserPosts(user);
+        long postsCount = postService.countUserPosts(user);
         Post firstPost = postService.findFirstPost();
         String firstPostDate = dateFormat.format(firstPost.getTime());
-        Long likesCount = voteService.countLikesOfUser(user);
-        Long dislikesCount = voteService.countDislikesOfUser(user);
-        Long viewsCount = postService.countUserPostsViews(user);
+        long likesCount = voteService.countLikesOfUser(user);
+        long dislikesCount = voteService.countDislikesOfUser(user);
+        long viewsCount = postService.countUserPostsViews(user);
         return new StatisticsDto(postsCount, likesCount, dislikesCount, viewsCount, firstPostDate);
     }
 
     public StatisticsDto getBlogStatistics() {
-
-        List<Post> posts = postService.getAllPots();
-        StatisticsDto statisticsDto = new StatisticsDto();
-        statisticsDto.setPostsCount(posts.size());
+        long postsCount = postService.countActivePosts();
         Post firstPost = postService.findFirstPost();
-        statisticsDto.setFirstPublication(dateFormat.format(firstPost.getTime()));
-        posts.forEach(post -> {
-            post.getVotes().forEach(vote -> {
-                if(vote.getValue() == 1)
-                    statisticsDto.setLikesCount(statisticsDto.getLikesCount() + 1);
-                else if (vote.getValue() == -1)
-                    statisticsDto.setDislikesCount(statisticsDto.getDislikesCount() + 1);
-            });
-            statisticsDto.setViewsCount(statisticsDto.getViewsCount() + post.getViewCount());
-        });
-        return statisticsDto;
+        String firstPostDate = dateFormat.format(firstPost.getTime());
+        long likesCount = voteService.countLikes();
+        long dislikesCount = voteService.countDislikes();
+        long viewsCount = postService.countAllPostsViews();
+        return new StatisticsDto(postsCount, likesCount, dislikesCount, viewsCount, firstPostDate);
     }
 
     public CalendarDto calendar(final int year) {
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         CalendarDto calendarDto = new CalendarDto();
-        List<Post> posts = postService.getAllPots();
+        List<Post> posts = postService.findAllActivePosts();
 
         final Map<String, Long> postsPerDate = posts.stream()
                                                 .filter(post -> post.getTime().getYear() == year)
@@ -126,14 +117,11 @@ public class GeneralService {
 
     public Map<String, Boolean> getSettings() {
         Map<String, Boolean> response = new HashMap<>();
-        User currentUser = userService.getCurrentUser();
-        if (currentUser != null) {
-            List<GlobalSetting> settings = settingService.getSettings();
-            if (settings.isEmpty()) {
-                settingService.fillSettings();
-            }
-            settings.forEach(setting -> response.put(setting.getCode(), setting.getValue()));
+        List<GlobalSetting> settings = settingService.getSettings();
+        if (settings.isEmpty()) {
+            settingService.fillSettings();
         }
+        settings.forEach(setting -> response.put(setting.getCode(), setting.getValue()));
         return response;
     }
 
