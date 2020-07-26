@@ -1,8 +1,6 @@
 package blogengine.models;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -10,20 +8,24 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
+@NoArgsConstructor
 @Table(name = "post_votes")
 public class Vote {
 
+    public Vote(@NotNull byte value) {
+        this.value = value;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private User user;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private Post post;
 
     @NotNull

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,9 +27,9 @@ public class CaptchaExpirationValidator implements ConstraintValidator<CaptchaNo
 
     @Override
     public boolean isValid(String captcha, ConstraintValidatorContext constraintValidatorContext) {
-        CaptchaCode captchaCode = captchaService.findByCode(captcha);
+        CaptchaCode captchaCode = captchaService.findBySecretCode(captcha);
         if (captchaCode != null) {
-            return captchaCode.getTime().plusSeconds(captchaExpirationTime).isAfter(LocalDateTime.now());
+            return captchaCode.getTime().plusSeconds(captchaExpirationTime).isAfter(LocalDateTime.now(ZoneOffset.UTC));
         }
         return false;
     }

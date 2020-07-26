@@ -3,6 +3,7 @@ package blogengine.models;
 import blogengine.models.postconstants.PostConstraints;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -14,12 +15,16 @@ import java.util.List;
 
 @Data
 @Entity
+@NoArgsConstructor
 @Table(name = "post_comments")
 public class Comment {
 
+    public Comment(@Size(min = PostConstraints.MIN_COMMENT_SIZE) String text) {
+        this.text = text;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @OneToMany(mappedBy = "comment")

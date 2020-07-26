@@ -62,12 +62,28 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
             + "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
     List<Post> findAllByTag(ModerationStatus moderationStatus, LocalDateTime date, String tag, Pageable pageable);
 
-    // ========================= Find all posts
-    List<Post> findAllBy();
+    // ========================= Find all active posts
+    List<Post> findAllByActiveTrue();
 
     // ======================== User's posts count
 
     Long countAllByUser(User user);
+
+    // ======================== Count user's inactive posts count
+
+    Long countAllByUserAndActiveFalse(User user);
+
+    default long countInactivePostsOfUser(User user) {
+        return countAllByUserAndActiveFalse(user);
+    }
+
+    // ======================== Count user's active posts count
+
+    Long countAllByUserAndModerationStatusAndActiveTrue(User user, ModerationStatus moderationStatus);
+
+    default long countActivePostsOfUser(User user, ModerationStatus moderationStatus) {
+        return countAllByUserAndModerationStatusAndActiveTrue(user, moderationStatus);
+    }
 
     // ======================== Inactive posts of user
     List<Post> findAllByUserAndActiveFalseOrderByTimeDesc(User user, Pageable pageable);
@@ -101,7 +117,14 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     // ======================== Find first post
     Optional<Post> findFirstByOrderByTime();
 
+    // ======================== Count active posts
+
+    long countAllByActiveTrue();
+
     // ========================
-    @Query("select sum(p.viewCount) from Post p where p.user = :user")
+    @Query("select sum(p.viewCount) from Post p where p.user = :user and p.active = true")
     Long countUserPostsViews(User user);
+
+    @Query("select sum(p.viewCount) from Post p where p.active = true")
+    long countAllPostsViews();
 }

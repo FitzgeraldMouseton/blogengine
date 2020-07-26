@@ -2,15 +2,21 @@ package blogengine.models.dto.blogdto.postdto;
 
 import blogengine.models.postconstants.PostConstraints;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Size;
 import java.util.Set;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AddPostRequest {
 
-    private String time;
+    private long timestamp;
 
     @JsonProperty("active")
     private boolean isActive;

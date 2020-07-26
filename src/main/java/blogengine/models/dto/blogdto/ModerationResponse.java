@@ -7,7 +7,7 @@ import lombok.Data;
 public class ModerationResponse {
 
     private int id;
-    private String time;
+    private long timestamp;
     private UserDto user;
     private String title;
     private String announce;

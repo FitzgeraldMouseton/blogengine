@@ -2,7 +2,6 @@ package blogengine.util.mail;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -24,6 +23,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void send(final String mailTo, final String subject, final String message) {
+        log.info("");
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(username);
         mailMessage.setTo(mailTo);

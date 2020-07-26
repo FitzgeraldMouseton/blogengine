@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,14 +24,32 @@ public class ApplicationExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
     }
 
+    @ExceptionHandler(AbstractUnauthenticatedException.class)
+    protected final ResponseEntity<ErrorResponse> handleUnauthenticatedException(final AbstractUnauthenticatedException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(ex.prefix(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(errors));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected final ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
+        AtomicBoolean isUnauthorized = new AtomicBoolean(false);
         ex.getBindingResult()
                 .getFieldErrors()
-                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+                .forEach(error -> {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                    if ("captcha".equals(error.getField())) {
+                        isUnauthorized.set(true);
+                    }
+                    log.info(error.getField());
+                } );
 
+        errors.forEach((k, v) -> log.info(k + ": " + v));
+        if (isUnauthorized.get()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(errors));
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
     }
 

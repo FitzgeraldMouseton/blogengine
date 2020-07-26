@@ -21,7 +21,6 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Setter(AccessLevel.PRIVATE)
     private int id;
 
     @NotNull
@@ -58,10 +57,12 @@ public class User {
     @OneToMany(mappedBy = "moderator", fetch = FetchType.LAZY)
     private List<Post> postsForModeration = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Vote> votes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
 
@@ -108,11 +109,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", isModerator=" + isModerator +
-                ", regTime=" + regTime +
                 ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
                 '}';
     }
 }

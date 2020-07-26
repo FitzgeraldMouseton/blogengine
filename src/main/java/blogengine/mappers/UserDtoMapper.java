@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Component
@@ -50,7 +51,7 @@ public class UserDtoMapper {
         user.setName(request.getName());
         user.setEmail(request.getEmail().trim().toLowerCase());
         user.setPassword(request.getPassword());
-        user.setRegTime(LocalDateTime.now());
+        user.setRegTime(LocalDateTime.now(ZoneOffset.UTC));
         user.setModerator(false);
         return user;
     }
