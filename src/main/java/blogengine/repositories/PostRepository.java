@@ -8,14 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Integer> {
-
-    long countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, LocalDateTime date);
 
     // ======================== Recent posts
     List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrueOrderByTimeDesc(ModerationStatus moderationStatus, LocalDateTime date, Pageable pageable);
@@ -57,17 +59,28 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time between :startOfDay and :endOfDay")
     List<Post> findPostsByDate(ModerationStatus moderationStatus, LocalDateTime startOfDay, LocalDateTime endOfDay, Pageable pageable);
 
+    @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time between :startOfDay and :endOfDay")
+    List<Post> findPostsByDate(ModerationStatus moderationStatus, LocalDateTime startOfDay, LocalDateTime endOfDay);
     // ========================= Find posts by tag
     @Query("SELECT p FROM Post p JOIN p.tags t WHERE p.active = 1 "
             + "AND p.moderationStatus = :moderationStatus AND p.time <= :date and t.name = :tag")
     List<Post> findAllByTag(ModerationStatus moderationStatus, LocalDateTime date, String tag, Pageable pageable);
 
     // ========================= Find all active posts
-    List<Post> findAllByActiveTrue();
+    List<Post> findAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, LocalDateTime localDateTime);
 
-    // ======================== User's posts count
+    default List<Post> findActivePosts() {
+        return findAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC));
+    }
 
-    Long countAllByUser(User user);
+    // ========================= Find all dates of active posts by year
+    @Query("SELECT p.time FROM Post p WHERE p.active = 1 AND p.moderationStatus = 'ACCEPTED' AND year(p.time) = :year " +
+            "order by p.time desc")
+    List<LocalDateTime> findAllByYear(int year);
+
+    // ========================= Find all years
+    @Query("SELECT distinct year(p.time) FROM Post p WHERE p.active = 1 AND p.moderationStatus = 'ACCEPTED'")
+    List<Integer> findAllYears();
 
     // ======================== Count user's inactive posts count
 
@@ -115,16 +128,31 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     int countPostsForModeration(User moderator);
 
     // ======================== Find first post
-    Optional<Post> findFirstByOrderByTime();
+    Optional<Post> findFirstByModerationStatusAndActiveTrueOrderByTime(ModerationStatus moderationStatus);
+
+    default Optional<Post> findFirstPost() {
+        return findFirstByModerationStatusAndActiveTrueOrderByTime(ModerationStatus.ACCEPTED);
+    }
+
+    // ======================== Find first post of user
+    Optional<Post> findFirstByUserAndModerationStatusAndActiveTrueOrderByTime(User user, ModerationStatus moderationStatus);
+
+    default Optional<Post> findFirstPostOfUser(User user) {
+        return findFirstByUserAndModerationStatusAndActiveTrueOrderByTime(user, ModerationStatus.ACCEPTED);
+    }
 
     // ======================== Count active posts
 
-    long countAllByActiveTrue();
+    long countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus moderationStatus, LocalDateTime localDateTime);
+
+    default long countActivePosts() {
+        return countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC));
+    }
 
     // ========================
-    @Query("select sum(p.viewCount) from Post p where p.user = :user and p.active = true")
+    @Query("select sum(p.viewCount) from Post p where p.user = :user and p.moderationStatus = 'ACCEPTED' and p.active = true")
     Long countUserPostsViews(User user);
 
-    @Query("select sum(p.viewCount) from Post p where p.active = true")
+    @Query("select sum(p.viewCount) from Post p where p.moderationStatus = 'ACCEPTED' and p.active = true")
     long countAllPostsViews();
 }

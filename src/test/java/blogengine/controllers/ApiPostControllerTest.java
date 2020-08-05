@@ -1,12 +1,11 @@
 package blogengine.controllers;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.models.ModerationStatus;
 import blogengine.models.Post;
 import blogengine.models.User;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
-import blogengine.services.PostService;
+import blogengine.repositories.PostRepository;
 import blogengine.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +24,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -50,7 +50,7 @@ class ApiPostControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private PostService postService;
+    private PostRepository postRepository;
     @MockBean
     private UserService userService;
 
@@ -206,10 +206,12 @@ class ApiPostControllerTest {
     }
 
     @Test
+    @Transactional
     @DisplayName("Add post when user is moderator - success")
     void addPostModerator() throws Exception {
 
         loginAsModerator();
+        int initialPostsCount = postRepository.findActivePosts().size();
         String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(path)
@@ -218,7 +220,7 @@ class ApiPostControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result", is(true)))
-                .andReturn();
+                .andExpect(mvcResult -> Assertions.assertEquals(initialPostsCount + 1, postRepository.findActivePosts().size()));
     }
 
     @Test
@@ -228,7 +230,7 @@ class ApiPostControllerTest {
         setMultiuserModeEnabled();
         setPremoderationModeEnabled();
 
-        int initialPostsCount = postService.findAllActivePosts().size();
+        int initialPostsCount = postRepository.findActivePosts().size();
 
         loginAsUser();
         String json = objectMapper.writeValueAsString(request);
@@ -236,12 +238,11 @@ class ApiPostControllerTest {
         mockMvc.perform(post(path)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
+                .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result", is(true)))
-                .andExpect(mvcResult -> Assertions.assertEquals(initialPostsCount + 1, postService.findAllActivePosts().size()))
-                .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.NEW,
-                        postService.findPostById(9).getModerationStatus()));
+                .andExpect(mvcResult -> Assertions.assertEquals(initialPostsCount, postRepository.findActivePosts().size()));
     }
 
     @Test
@@ -249,7 +250,7 @@ class ApiPostControllerTest {
     void addPostNotModeratorWithoutPremoderationSuccess() throws Exception {
 
         setMultiuserModeEnabled();
-        int initialPostsCount = postService.findAllActivePosts().size();
+        int initialPostsCount = postRepository.findActivePosts().size();
 
         loginAsUser();
         String json = objectMapper.writeValueAsString(request);
@@ -260,9 +261,7 @@ class ApiPostControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result", is(true)))
-                .andExpect(mvcResult -> Assertions.assertEquals(initialPostsCount + 1, postService.findAllActivePosts().size()))
-                .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.ACCEPTED,
-                        postService.findPostById(10).getModerationStatus()));
+                .andExpect(mvcResult -> Assertions.assertEquals(initialPostsCount + 1, postRepository.findActivePosts().size()));
     }
 
     @Test
@@ -275,6 +274,7 @@ class ApiPostControllerTest {
         mockMvc.perform(post(path)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result", is(false)))
@@ -297,15 +297,16 @@ class ApiPostControllerTest {
                 .content(json))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(mvcResult -> Assertions.assertEquals(request.getText(), postService.findPostById(postId).getText()));
+                .andExpect(mvcResult -> Assertions.assertEquals(request.getText(), postRepository.findById(postId).get().getText()));
     }
 
     @Test
+    @Transactional
     @DisplayName("Like post when it is first like from current user")
     void addLike() throws Exception {
 
         int postId = 1;
-        Post post = postService.findPostById(postId);
+        Post post = postRepository.findById(postId).get();
         int initialVotesCount = post.getVotes().size();
 
         post.getVotes().forEach(vote -> {
@@ -323,20 +324,17 @@ class ApiPostControllerTest {
                 .content(json))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(mvcResult -> Assertions.assertEquals(initialVotesCount + 1, post.getVotes().size()));
-//        final List<Vote> votes = post.getVotes();
-//        votes.forEach(vote -> log.info(vote.toString()));
-        post.getVotes().forEach(vote -> {
-            if (vote.getUser().getId() == 2)
-                System.out.println(vote.toString());
-        });
+                .andExpect(mvcResult -> Assertions.assertEquals(initialVotesCount + 1,
+                        postRepository.findById(1).get().getVotes().size()));
     }
 
     @Test
+    @Transactional
+    @DisplayName("Dislike post")
     void dislikePost() throws Exception {
 
         int postId = 3;
-        Post post = postService.findPostById(postId);
+        Post post = postRepository.findById(postId).get();
         int initialVotesCount = post.getVotes().size();
 
         loginAsUser();
@@ -349,7 +347,8 @@ class ApiPostControllerTest {
                 .content(json))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(mvcResult -> Assertions.assertEquals(initialVotesCount + 1, post.getVotes().size()));
+                .andExpect(mvcResult -> Assertions.assertEquals(initialVotesCount + 1,
+                        postRepository.findById(1).get().getVotes().size()));
     }
 
     @Test

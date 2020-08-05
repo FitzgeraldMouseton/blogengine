@@ -13,5 +13,5 @@ public class StatisticsDto {
     private long likesCount;
     private long dislikesCount;
     private long viewsCount;
-    private String firstPublication;
+    private long firstPublication;
 }

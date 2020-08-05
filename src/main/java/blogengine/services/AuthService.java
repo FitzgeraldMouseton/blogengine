@@ -116,7 +116,6 @@ public class AuthService {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         sessionStorage.getSessions().remove(sessionId);
         request.logout();
-        sessionStorage.getSessions().forEach((k, v) -> log.info("sessionId: " + k + " - " + "userId: " + v));
         return new SimpleResponseDto(true);
     }
 

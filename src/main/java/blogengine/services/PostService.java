@@ -20,10 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,11 +44,19 @@ public class PostService {
     }
 
     public List<Post> findAllActivePosts() {
-        return postRepository.findAllByActiveTrue();
+        return postRepository.findActivePosts();
+    }
+
+    public List<LocalDateTime> findAllDatesInYear(int year) {
+        return postRepository.findAllByYear(year);
+    }
+
+    public List<Integer> findAllYears() {
+        return postRepository.findAllYears();
     }
 
     public long countActivePosts() {
-        return postRepository.countAllByActiveTrue();
+        return postRepository.countActivePosts();
     }
 
     public void save(final Post post) {
@@ -59,7 +64,7 @@ public class PostService {
     }
 
     long countUserPosts(final User user) {
-        return postRepository.countAllByUser(user);
+        return postRepository.countActivePostsOfUser(user, ModerationStatus.ACCEPTED);
     }
 
     long countUserPostsViews(final User user) {
@@ -71,7 +76,11 @@ public class PostService {
     }
 
     Post findFirstPost() {
-        return postRepository.findFirstByOrderByTime().orElse(null);
+        return postRepository.findFirstPost().orElse(null);
+    }
+
+    Post findFirstPostOfUser(User user) {
+        return postRepository.findFirstPostOfUser(user).orElse(null);
     }
 
     public int countPostsForModeration(final User moderator) {
@@ -83,8 +92,7 @@ public class PostService {
     public PostsInfoResponse<PostDto> findPosts(final int offset, final int limit, final String mode) {
 
         List<Post> posts;
-        long postsCount = postRepository
-                .countAllByModerationStatusAndTimeBeforeAndActiveTrue(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC));
+        long postsCount = countActivePosts();
         Pageable pageable = PageRequest.of(offset/limit, limit);
         switch (mode) {
             case "recent":
@@ -186,6 +194,13 @@ public class PostService {
         return postDtoMapper.singlePostToPostDto(post);
     }
 
+    public PostsInfoResponse<PostDto> findPostsByYear(final int year) {
+        LocalDateTime startDate = LocalDateTime.of(year, 1,1,0,0,0);
+        LocalDateTime endDate = startDate.plusYears(1);
+        List<Post> posts = postRepository.findPostsByDate(ModerationStatus.ACCEPTED, startDate, endDate);
+        return new PostsInfoResponse<>(posts.size(), getPostDTOs(posts));
+    }
+
     public PostsInfoResponse<PostDto> findPostsByDate(final int offset, final int limit, final LocalDate date) {
         Pageable pageable = PageRequest.of(offset/limit, limit);
         List<Post> posts = postRepository.findPostsByDate(ModerationStatus.ACCEPTED, date.atStartOfDay(), date.atStartOfDay().plusDays(1), pageable);
@@ -198,17 +213,30 @@ public class PostService {
         return new PostsInfoResponse<>(posts.size(), getPostDTOs(posts));
     }
 
+    @Transactional
     public SimpleResponseDto addPost(final AddPostRequest request) {
         User user = userService.getCurrentUser();
+        int initialPostsCount = postRepository.findActivePosts().size();
+        log.info("Active posts before: " + initialPostsCount);
         if (!settingService.isMultiUserEnabled() && !user.isModerator()) {
             throw new NotEnoughPrivilegesException("Публиковать посты может только модератор");
         } else {
             Post post = postDtoMapper.addPostRequestToPost(request);
-            postRepository.save(post);
+            user.addPost(post);
+            initialPostsCount = postRepository.findActivePosts().size();
+            log.info("Active posts after: " + initialPostsCount);
+            log.info("isActive: " + post.isActive());
+            log.info("Status: " + post.getModerationStatus());
+            log.info(String.valueOf(post.getTime().isBefore(LocalDateTime.now(ZoneOffset.UTC))));
+            log.info("Post time: " + post.getTime());
+            log.info("now(): " + LocalDateTime.now(ZoneOffset.UTC));
+            Duration duration = Duration.between(post.getTime(), LocalDateTime.now(ZoneOffset.UTC));
+            log.info("Duration: " + duration);
             return new SimpleResponseDto(true);
         }
     }
 
+    @Transactional
     public SimpleResponseDto editPost(final int id, final AddPostRequest request) {
         Post post = findPostById(id);
         User user = userService.getCurrentUser();
@@ -243,18 +271,19 @@ public class PostService {
         return new SimpleResponseDto(true);
     }
 
+    @Transactional
     public CommentResponse addComment(final CommentRequest request) {
+        User user = userService.getCurrentUser();
         Comment comment = new Comment();
         Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
-        comment.setPost(post);
         if (request.getParentId() != null && !request.getParentId().isEmpty()) {
             Comment parent = commentService.findById(Integer.parseInt(request.getParentId()));
-            comment.setComment(parent);
+            comment.setParent(parent);
         }
         comment.setText(request.getText());
-        comment.setUser(userService.getCurrentUser());
         comment.setTime(LocalDateTime.now());
-        commentService.save(comment);
+        user.addComment(comment);
+        post.addComment(comment);
         return new CommentResponse(comment.getId());
     }
 
@@ -269,11 +298,10 @@ public class PostService {
         if (like != null || post == null) {
             return new SimpleResponseDto(false);
         }
-        log.info("votes before: " + post.getVotes().size());
-        like = voteService.getLike(post, user);
+        like = voteService.getLike();
+        user.addVote(like);
         post.addVote(like);
         voteService.deleteDislikeIfExists(post, user);
-        log.info("votes after: " + post.getVotes().size());
         return new SimpleResponseDto(true);
     }
 
@@ -288,11 +316,10 @@ public class PostService {
         if (dislike != null || post == null) {
             return new SimpleResponseDto(false);
         }
-        log.info("votes before: " + post.getVotes().size());
-        dislike = voteService.getDislike(post, user);
+        dislike = voteService.getDislike();
+        user.addVote(dislike);
         post.addVote(dislike);
         voteService.deleteLikeIfExists(post, user);
-        log.info("votes after: " + post.getVotes().size());
         return new SimpleResponseDto(true);
     }
 

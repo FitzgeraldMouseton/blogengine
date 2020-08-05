@@ -28,7 +28,7 @@ public class VoteService {
         voteRepository.save(vote);
     }
 
-    Long countLikesOfUser(final User user) {
+    Long countLikesOfUserPosts(final User user) {
         return voteRepository.countVotesOfUserPosts(user, LIKE);
     }
 
@@ -56,12 +56,12 @@ public class VoteService {
         voteRepository.delete(vote);
     }
 
-    Vote getLike(final Post post, final User user) {
-        return createVote(post, user, LIKE);
+    Vote getLike() {
+        return createVote(LIKE);
     }
 
-    Vote getDislike(final Post post, final User user) {
-        return createVote(post, user, DISLIKE);
+    Vote getDislike() {
+        return createVote(DISLIKE);
     }
 
     void deleteLikeIfExists(final Post post, final User user) {
@@ -77,10 +77,8 @@ public class VoteService {
             post.removeVote(dislike);
     }
 
-    public Vote createVote(final Post post, final User user, final byte value) {
+    public Vote createVote(final byte value) {
         Vote vote = new Vote();
-        vote.setPost(post);
-        vote.setUser(user);
         vote.setValue(value);
         vote.setTime(LocalDateTime.now());
         return vote;

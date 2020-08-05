@@ -36,10 +36,10 @@ public class Post {
     private ModerationStatus moderationStatus;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User moderator;
 
     @NotNull
@@ -58,13 +58,17 @@ public class Post {
     @Column(name = "view_count")
     private int viewCount;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+//    @ElementCollection(fetch = FetchType.EAGER)
     private List<Vote> votes = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "posts_tags",
+            joinColumns = {@JoinColumn(name = "post_id")},
+            inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private Set<Tag> tags = new HashSet<>();
 
     public void addVote(final Vote vote) {
@@ -74,6 +78,7 @@ public class Post {
 
     public void removeVote(final Vote vote) {
         this.votes.remove(vote);
+        vote.setPost(null);
     }
 
     public void addComment(final Comment comment) {
@@ -83,6 +88,7 @@ public class Post {
 
     public void removeComment(final Comment comment) {
         this.comments.remove(comment);
+        comment.setPost(null);
     }
 
     public void addTag(final Tag tag) {

@@ -1,5 +1,5 @@
 Insert into USERS (ID, CODE, EMAIL, IS_MODERATOR, NAME, PASSWORD, PHOTO, REG_TIME) values
-(1, '0000', 'ernest@gmail.com', 0, 'Эрнест Хемингуэй', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-12-26 00:00:01'),
+(1, '0000', 'ernest@gmail.com', 0, 'Эрнест Хемингуэй', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', '/avatars/uxyv/rmwm/ocwf/photo.jpg', '2019-12-26 00:00:01'),
 (2, '0000', 'gleb@gmail.com', 0, 'Глеб Успенский', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-02-15 00:00:01'),
 (3, '0000', 'gabriel@gmail.com', 1, 'Габриэль Гарсия Маркес', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-01-26 00:00:01'),
 (4, '0000', 'flannery@gmail.com', 0, 'Фланнери О''Коннор', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-03-08 00:00:01'),
@@ -15,7 +15,7 @@ Insert into posts(id, is_active, moderation_status, title, time, text, view_coun
 (7, 1, 'NEW', 'Земной рай', '2020-03-16 00:00:01', 'В числе знакомых Нади было, между прочим, семейство Печкиных', 8, 3, 2),
 (8, 1, 'ACCEPTED', 'Власть земли', '2020-03-12 00:00:01', 'Морозный зимний день в полном блеске', 25, 3, 2);
 
-Insert into post_comments (id, text, time, comment_id, post_id, user_id) values
+Insert into post_comments (id, text, time, parent_id, post_id, user_id) values
 (1, '11111', now(), null, 1, 1),
 (2, '22222', now(), null, 1, 3),
 
@@ -55,7 +55,7 @@ Insert into tags(id, name) values
 (5, 'О''КОННОР'),
 (6, 'КАФКА');
 
-Insert into posts_tags(posts_id, tags_id) values
+Insert into posts_tags(post_id, tag_id) values
 (1, 2),
 (2, 3),
 (3, 4),

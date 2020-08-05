@@ -1,6 +1,5 @@
 package blogengine.controllers;
 
-import blogengine.models.CaptchaCode;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.BlogInfo;
 import blogengine.models.dto.blogdto.CalendarDto;
@@ -9,13 +8,14 @@ import blogengine.models.dto.blogdto.StatisticsDto;
 import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.tagdto.TagsResponse;
-import blogengine.models.dto.userdto.ChangeProfileRequest;
+import blogengine.models.dto.userdto.EditProfileRequest;
 import blogengine.services.CaptchaService;
 import blogengine.services.GeneralService;
 import blogengine.services.PostService;
 import blogengine.services.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,13 +36,28 @@ public class ApiGeneralController {
     private final PostService postService;
     private final CaptchaService captchaService;
 
+    @Value("${blog_info.title}")
+    private String title;
+    @Value("${blog_info.subtitle}")
+    private String subtitle;
+    @Value("${blog_info.phone}")
+    private String phone;
+    @Value("${blog_info.email}")
+    private String email;
+    @Value("${blog_info.copyright}")
+    private String copyright;
+    @Value("${blog_info.copyright_form}")
+    private String copyrightForm;
+
     @GetMapping("/init")
     public BlogInfo getBlogInfo() {
-        return new BlogInfo();
+        return BlogInfo.builder().title(title).subtitle(subtitle).phone(phone)
+                .email(email).copyright(copyright).copyrightForm(copyrightForm).build();
     }
 
     @PostMapping("moderation")
     public void moderation(@RequestBody final ModerationRequest request) {
+        log.info("moderation");
         generalService.moderation(request);
     }
 
@@ -71,20 +86,20 @@ public class ApiGeneralController {
         return ResponseEntity.ok().body(postService.addComment(commentRequest));
     }
 
-    @PostMapping("image")
-    public String uploadImage(@RequestParam final MultipartFile image) throws IOException {
-        return generalService.uploadPostImage(image);
+    @PostMapping(value = "image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String uploadImage(@RequestParam(name = "image") final MultipartFile file) throws IOException {
+        return generalService.uploadPostImage(file);
     }
 
     @PostMapping(value = "profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public SimpleResponseDto editProfileWithPhoto(@RequestParam final MultipartFile photo,
-                                                  @ModelAttribute @Valid final ChangeProfileRequest request) throws IOException {
+                                                  @ModelAttribute @Valid final EditProfileRequest request) throws IOException {
 
         return generalService.editProfileWithPhoto(photo, request);
     }
 
     @PostMapping(value = "profile/my", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public SimpleResponseDto editProfile(@Valid @RequestBody final ChangeProfileRequest request) {
+    public SimpleResponseDto editProfile(@Valid @RequestBody final EditProfileRequest request) {
         return generalService.editProfileWithoutPhoto(request);
     }
 
@@ -96,11 +111,5 @@ public class ApiGeneralController {
     @PutMapping("settings")
     public void changeSettings(@RequestBody Map<String, Boolean> request) {
         generalService.changeSettings(request);
-    }
-
-    @DeleteMapping
-    public void deleteCaptcha(@RequestParam final String code) {
-        CaptchaCode captchaCode = captchaService.findBySecretCode(code);
-        captchaService.delete(captchaCode);
     }
 }

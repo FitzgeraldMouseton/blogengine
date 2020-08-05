@@ -35,6 +35,10 @@ public class TagService {
         List<Tag> tagList = (query == null) ? tagRepository.findAllByEmptyQuery()
                 : tagRepository.findAllByNameStartingWith(query);
 
+        if (tagList.isEmpty()) {
+            return new TagsResponse(null);
+        }
+
         Map<String, Long> collect = tagList.stream().collect(Collectors.groupingBy(Tag::getName, Collectors.counting()));
         Long maxWeight = Collections.max(collect.values());
 

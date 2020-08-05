@@ -3,16 +3,13 @@ package blogengine.controllers;
 import blogengine.models.CaptchaCode;
 import blogengine.models.User;
 import blogengine.models.dto.SimpleResponseDto;
-import blogengine.models.dto.authdto.LoginRequest;
-import blogengine.models.dto.authdto.RegisterRequest;
-import blogengine.models.dto.authdto.RestorePasswordRequest;
-import blogengine.models.dto.authdto.SetPassRequest;
+import blogengine.models.dto.authdto.*;
 import blogengine.services.AuthService;
 import blogengine.services.CaptchaService;
 import blogengine.services.UserService;
-import blogengine.util.mail.EmailServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,18 +19,26 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 
 import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,14 +52,14 @@ class ApiAuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private WebApplicationContext wac;
     @MockBean
     private CaptchaService captchaService;
     @MockBean
     private UserService userService;
     @MockBean
     private AuthService authService;
-    @MockBean
-    private EmailServiceImpl emailService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String path = "/api/auth";
@@ -125,7 +130,7 @@ class ApiAuthControllerTest {
         doReturn(mock(User.class)).when(userService).findByEmail(alreadyExistingEmail);
 //        when(userService.findByEmail("ernest@gmail.com")).thenReturn(mock(User.class));
 
-        RegisterRequest registerRequest = new RegisterRequest(alreadyExistingEmail, "Gabriel Markes",
+        RegisterRequest registerRequest = new RegisterRequest(alreadyExistingEmail, "Gabriel Marques",
                 password, captchaCode, captchaSecret);
 
         String json = objectMapper.writeValueAsString(registerRequest);
@@ -139,8 +144,20 @@ class ApiAuthControllerTest {
     }
 
     @Test
-    void check() {
-        //TODO
+    @DisplayName("Check")
+    void check() throws Exception {
+
+        loginAsUser(1);
+        AuthenticationResponse response = new AuthenticationResponse();
+        UserLoginResponse loginResponse = new UserLoginResponse();
+        loginResponse.setId(1);
+        response.setUser(loginResponse);
+        doReturn(response).when(authService).check();
+
+        mockMvc.perform(get(path + "/check"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.id", is(1)));
     }
 
     @Test
@@ -161,16 +178,21 @@ class ApiAuthControllerTest {
     @Test
     void setNewPassword() throws Exception {
 
-        //TODO
+        CaptchaCode captcha = new CaptchaCode(1, captchaCode, captchaSecret, time);
+        doReturn(captcha).when(captchaService).findBySecretCode(anyString());
 
+        String time = Long.toString(Instant.now().toEpochMilli());
+        String encodedTime = RandomStringUtils.randomAlphanumeric(40) + Base64.getEncoder().encodeToString(time.getBytes());
         SetPassRequest request =
-                new SetPassRequest("654321", argThat(arg -> arg.length() == 60), captchaCode, captchaSecret);
+                new SetPassRequest("654321", encodedTime, captchaCode, captchaSecret);
         doReturn(new SimpleResponseDto(true)).when(authService).setNewPassword(request);
+
         String jsonContent = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(path + "/password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonContent));
+                .content(jsonContent))
+                .andExpect(status().isOk());
 
         verify(authService, times(1)).setNewPassword(request);
     }
@@ -178,6 +200,18 @@ class ApiAuthControllerTest {
     @Test
     void logout() throws Exception {
 
-        //TODO
+        mockMvc.perform(get(path + "/logout"))
+                .andExpect(status().isOk());
+    }
+
+    private void loginAsUser(int id) {
+        User user = new User();
+        user.setId(id);
+        doReturn(user).when(userService).getCurrentUser();
+    }
+
+    private MockHttpSession getMockSession() {
+        return new MockHttpSession(wac.getServletContext(),
+                RequestContextHolder.currentRequestAttributes().getSessionId());
     }
 }

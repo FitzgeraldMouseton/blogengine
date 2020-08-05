@@ -63,7 +63,6 @@ public class PostDtoMapper {
     public Post addPostRequestToPost(final AddPostRequest request) {
         Post post = new Post();
         User user = userService.getCurrentUser();
-        post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
         LocalDateTime requestTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(request.getTimestamp()), ZoneOffset.UTC);

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -50,7 +52,7 @@ public class User {
     private String photo;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Post> posts = new ArrayList<>();
 
     @JsonIgnore
@@ -58,11 +60,12 @@ public class User {
     private List<Post> postsForModeration = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Vote> votes = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    @Fetch(value = FetchMode.SUBSELECT)
     private List<Comment> comments = new ArrayList<>();
 
 
@@ -71,14 +74,29 @@ public class User {
         post.setUser(this);
     }
 
+    public void removePost(final Post post) {
+        this.posts.remove(post);
+        post.setUser(null);
+    }
+
     public void addVote(final Vote vote) {
         this.votes.add(vote);
         vote.setUser(this);
     }
 
+    public void removeVote(final Vote vote) {
+        this.votes.remove(vote);
+        vote.setUser(null);
+    }
+
     public void addComment(final Comment comment) {
         this.comments.add(comment);
         comment.setUser(this);
+    }
+
+    public void removeComment(final Comment comment) {
+        this.comments.remove(comment);
+        comment.setUser(null);
     }
 
     @Override

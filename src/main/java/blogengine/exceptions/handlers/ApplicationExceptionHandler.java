@@ -1,5 +1,7 @@
-package blogengine.exceptions;
+package blogengine.exceptions.handlers;
 
+import blogengine.exceptions.AbstractBadRequestException;
+import blogengine.exceptions.AbstractUnauthenticatedException;
 import blogengine.models.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileUploadBase;

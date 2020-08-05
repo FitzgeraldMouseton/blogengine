@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @NoArgsConstructor
+@Embeddable
 @Table(name = "post_votes")
 public class Vote {
 

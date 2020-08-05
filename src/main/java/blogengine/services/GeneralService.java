@@ -9,12 +9,18 @@ import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
-import blogengine.models.dto.userdto.ChangeProfileRequest;
+import blogengine.models.dto.blogdto.postdto.PostDto;
+import blogengine.models.dto.blogdto.postdto.PostsInfoResponse;
+import blogengine.models.dto.userdto.EditProfileRequest;
+import blogengine.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -27,11 +33,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,14 +52,13 @@ public class GeneralService {
     private final VoteService voteService;
     private final SettingService settingService;
 
-    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final int FOLDER_NAME_LENGTH = 4;
-    private static final int NUMBER_OF_FOLDER_IN_IMAGE_PATH = 3;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    @Value("${image.max_width}")
-    private int maxWidth;
-    @Value("${image.max_height}")
-    private int maxHeight;
+    private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+    private static final int FOLDER_NAME_LENGTH = 4;
+    private static final int NUMBER_OF_FOLDERS_IN_IMAGE_PATH = 3;
+
     @Value("${image.crop_width}")
     private int cropWidth;
     @Value("${image.crop_height}")
@@ -63,6 +70,7 @@ public class GeneralService {
     @Value("${location.avatars}")
     private String avatarsLocation;
 
+    @Transactional
     public void moderation(final ModerationRequest request) {
         User moderator = userService.getCurrentUser();
         Post post = postService.findPostById(request.getPostId());
@@ -79,9 +87,9 @@ public class GeneralService {
     public StatisticsDto getCurrentUserStatistics() {
         User user = userService.getCurrentUser();
         long postsCount = postService.countUserPosts(user);
-        Post firstPost = postService.findFirstPost();
-        String firstPostDate = dateFormat.format(firstPost.getTime());
-        long likesCount = voteService.countLikesOfUser(user);
+        Post firstPost = postService.findFirstPostOfUser(user);
+        long firstPostDate = firstPost.getTime().toInstant(ZoneOffset.UTC).toEpochMilli();
+        long likesCount = voteService.countLikesOfUserPosts(user);
         long dislikesCount = voteService.countDislikesOfUser(user);
         long viewsCount = postService.countUserPostsViews(user);
         return new StatisticsDto(postsCount, likesCount, dislikesCount, viewsCount, firstPostDate);
@@ -90,7 +98,7 @@ public class GeneralService {
     public StatisticsDto getBlogStatistics() {
         long postsCount = postService.countActivePosts();
         Post firstPost = postService.findFirstPost();
-        String firstPostDate = dateFormat.format(firstPost.getTime());
+        long firstPostDate = firstPost.getTime().toInstant(ZoneOffset.UTC).toEpochMilli();
         long likesCount = voteService.countLikes();
         long dislikesCount = voteService.countDislikes();
         long viewsCount = postService.countAllPostsViews();
@@ -100,20 +108,43 @@ public class GeneralService {
     public CalendarDto calendar(final int year) {
         dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         CalendarDto calendarDto = new CalendarDto();
-        List<Post> posts = postService.findAllActivePosts();
 
-        final Map<String, Long> postsPerDate = posts.stream()
-                                                .filter(post -> post.getTime().getYear() == year)
-                                                .sorted(Comparator.comparing(Post::getTime).reversed())
-                                                .collect(Collectors.groupingBy(p -> dateFormat.format(p.getTime()), Collectors.counting()));
+        List<Integer> years = postService.findAllYears();
 
-        final Integer[] years = posts.stream().map(post -> post.getTime().getYear()).distinct()
-                .sorted(Comparator.reverseOrder()).toArray(Integer[]::new);
+        Map<String, Long> posts = postService.findAllDatesInYear(year).stream()
+                .collect(Collectors.groupingBy(p -> dateFormat.format(p), Collectors.counting()));
 
-        calendarDto.setPosts(postsPerDate);
-        calendarDto.setYears(years);
+        calendarDto.setPosts(posts);
+        calendarDto.setYears(years.toArray(Integer[]::new));
         return calendarDto;
     }
+
+//    public CalendarDto calendar(final int year) {
+//        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//        CalendarDto calendarDto = new CalendarDto();
+//        Map<String, Long> posts = new HashMap<>();
+//
+//        String yearsSql = "select distinct year(time) from posts " +
+//                "where is_active = 1 and moderation_status = 'ACCEPTED'";
+//
+//        String postPerYearSql = "select date(time) as date, count(*) as count from posts " +
+//                "where is_active = 1 and moderation_status = 'ACCEPTED' and time like '%" + year + "%' " +
+//                "group by date order by date desc";
+//
+//        List<Integer> years = jdbcTemplate.queryForList(yearsSql, Integer.class);
+//
+//        List<Map<String, Object>> datesInYear = jdbcTemplate.queryForList(postPerYearSql);
+//
+//        datesInYear.forEach(dates -> {
+//            Date date = (Date) dates.get("date");
+//            Long count = (Long) dates.get("count");
+//            posts.put(date.toString(), count);
+//        });
+
+//        calendarDto.setPosts(posts);
+//        calendarDto.setYears(years.toArray(Integer[]::new));
+//        return calendarDto;
+//    }
 
     public Map<String, Boolean> getSettings() {
         Map<String, Boolean> response = new HashMap<>();
@@ -142,8 +173,9 @@ public class GeneralService {
         }
     }
 
+    @Transactional
     public SimpleResponseDto editProfileWithPhoto(final MultipartFile file,
-                                                  final ChangeProfileRequest request) throws IOException {
+                                                  final EditProfileRequest request) throws IOException {
         User user = getEditedUser(request);
         String photo = uploadUserAvatar(file);
         user.setPhoto(photo);
@@ -151,7 +183,8 @@ public class GeneralService {
         return new SimpleResponseDto(true);
     }
 
-    public SimpleResponseDto editProfileWithoutPhoto(final ChangeProfileRequest request) {
+    @Transactional
+    public SimpleResponseDto editProfileWithoutPhoto(final EditProfileRequest request) {
         userService.save(getEditedUser(request));
         return new SimpleResponseDto(true);
     }
@@ -214,7 +247,7 @@ public class GeneralService {
 
     private String getPathForUpload(final String string) throws IOException {
         StringBuilder builder = new StringBuilder(string);
-        for (int i = 0; i < NUMBER_OF_FOLDER_IN_IMAGE_PATH; i++) {
+        for (int i = 0; i < NUMBER_OF_FOLDERS_IN_IMAGE_PATH; i++) {
             String rand = RandomStringUtils.randomAlphabetic(FOLDER_NAME_LENGTH).toLowerCase();
             builder.append(rand).append("/");
         }
@@ -223,7 +256,7 @@ public class GeneralService {
         return builder.toString();
     }
 
-    private User getEditedUser(final ChangeProfileRequest request) {
+    private User getEditedUser(final EditProfileRequest request) {
         User user = userService.getCurrentUser();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
@@ -247,3 +280,23 @@ public class GeneralService {
         return resizedImage;
     }
 }
+
+
+
+
+
+
+
+
+// calendar
+
+//    List<Post> posts = postService.findAllActivePosts();
+//
+//    final Map<String, Long> postsPerDate = posts.stream()
+//            .filter(post -> post.getTime().getYear() == year)
+//            .sorted(Comparator.comparing(Post::getTime).reversed())
+//            .collect(Collectors.groupingBy(p -> dateFormat.format(p.getTime()), Collectors.counting()));
+//
+//    final Integer[] years = posts.stream().map(post -> post.getTime().getYear()).distinct()
+//            .sorted(Comparator.reverseOrder()).toArray(Integer[]::new);
+
