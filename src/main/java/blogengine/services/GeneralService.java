@@ -9,16 +9,11 @@ import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
-import blogengine.models.dto.blogdto.postdto.PostDto;
-import blogengine.models.dto.blogdto.postdto.PostsInfoResponse;
 import blogengine.models.dto.userdto.EditProfileRequest;
-import blogengine.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,13 +28,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Date;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,8 +47,8 @@ public class GeneralService {
     private final VoteService voteService;
     private final SettingService settingService;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+//    @Autowired
+//    private JdbcTemplate jdbcTemplate;
 
     private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     private static final int FOLDER_NAME_LENGTH = 4;
@@ -88,7 +83,7 @@ public class GeneralService {
         User user = userService.getCurrentUser();
         long postsCount = postService.countUserPosts(user);
         Post firstPost = postService.findFirstPostOfUser(user);
-        long firstPostDate = firstPost.getTime().toInstant(ZoneOffset.UTC).toEpochMilli();
+        long firstPostDate = firstPost.getTime().toEpochSecond(ZoneOffset.UTC);
         long likesCount = voteService.countLikesOfUserPosts(user);
         long dislikesCount = voteService.countDislikesOfUser(user);
         long viewsCount = postService.countUserPostsViews(user);
@@ -98,7 +93,7 @@ public class GeneralService {
     public StatisticsDto getBlogStatistics() {
         long postsCount = postService.countActivePosts();
         Post firstPost = postService.findFirstPost();
-        long firstPostDate = firstPost.getTime().toInstant(ZoneOffset.UTC).toEpochMilli();
+        long firstPostDate = firstPost.getTime().toEpochSecond(ZoneOffset.UTC);
         long likesCount = voteService.countLikes();
         long dislikesCount = voteService.countDislikes();
         long viewsCount = postService.countAllPostsViews();

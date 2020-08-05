@@ -22,7 +22,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Base64;
 
 @Slf4j
@@ -128,7 +130,7 @@ public class AuthService {
     }
 
     private String getEncodedCurrentTime() {
-        long currentTimeMilli = Instant.now().toEpochMilli();
+        long currentTimeMilli = Instant.now(Clock.systemUTC()).toEpochMilli();
         String time = Long.toString(currentTimeMilli);
         return Base64.getEncoder().encodeToString(time.getBytes());
     }
