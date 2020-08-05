@@ -128,7 +128,7 @@ class ApiGeneralControllerTest {
         loginAsUser(2);
 
         StatisticsDto dto = new StatisticsDto(2, 2, 0, 35,
-                LocalDateTime.of(2020, 3, 12, 0, 0, 1).toInstant(ZoneOffset.UTC).toEpochMilli());
+                LocalDateTime.of(2020, 3, 12, 0, 0, 1).toEpochSecond(ZoneOffset.UTC));
 //        StatisticsDto dto = new StatisticsDto(2, 3, 2, 70,
 //                LocalDateTime.of(2020, 1, 1, 0, 0, 1).toInstant(ZoneOffset.UTC).toEpochMilli());
         String json = objectMapper.writeValueAsString(dto);

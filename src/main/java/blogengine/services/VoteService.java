@@ -1,14 +1,11 @@
 package blogengine.services;
 
-import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.Post;
 import blogengine.models.User;
 import blogengine.models.Vote;
 import blogengine.repositories.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,7 +16,6 @@ import java.time.LocalDateTime;
 public class VoteService {
 
     private final VoteRepository voteRepository;
-    private final UserService userService;
 
     private static final byte LIKE = 1;
     private static final byte DISLIKE = -1;

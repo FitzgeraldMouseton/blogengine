@@ -243,7 +243,7 @@ public class PostService {
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
-        LocalDateTime requestTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(request.getTimestamp()), ZoneOffset.UTC);
+        LocalDateTime requestTime = LocalDateTime.ofEpochSecond(request.getTimestamp(), 0, ZoneOffset.UTC);
         LocalDateTime postTime = requestTime
                 .isBefore(LocalDateTime.now(ZoneOffset.UTC)) ? LocalDateTime.now(ZoneOffset.UTC) : requestTime;
         post.setTime(postTime);

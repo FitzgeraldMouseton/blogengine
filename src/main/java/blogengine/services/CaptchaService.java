@@ -8,19 +8,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
-import javax.validation.ConstraintValidatorContext;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -90,7 +88,7 @@ public class CaptchaService {
             e.printStackTrace();
         }
 
-        CaptchaCode captchaCode = new CaptchaCode(code, secretCode, LocalDateTime.now());
+        CaptchaCode captchaCode = new CaptchaCode(code, secretCode, LocalDateTime.now(ZoneOffset.UTC));
         captchaRepository.save(captchaCode);
         dbEventsCreator.deleteCaptchaWhenExpired(captchaCode, captchaExpirationTime);
         return captchaDto;

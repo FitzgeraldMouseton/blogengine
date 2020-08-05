@@ -13,7 +13,7 @@ public class CommentDTO {
     }
 
     private int id;
-    private String time;
+    private long timestamp;
     private String text;
     private UserDto user;
 }
