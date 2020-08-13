@@ -3,6 +3,7 @@ package blogengine.controllers;
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
 import blogengine.models.Post;
 import blogengine.models.User;
+import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
@@ -26,13 +27,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -224,7 +227,7 @@ class ApiPostControllerTest {
     }
 
     @Test
-    @DisplayName("Add post when user is not moderator with premoderation - success")
+    @DisplayName("Add post when user is not moderator with premoderation - failure")
     void addPostNotModeratorWithPremoderationSuccess() throws Exception {
 
         setMultiuserModeEnabled();
@@ -305,14 +308,9 @@ class ApiPostControllerTest {
     @DisplayName("Like post when it is first like from current user")
     void addLike() throws Exception {
 
-        int postId = 1;
+        int postId = 3;
         Post post = postRepository.findById(postId).get();
         int initialVotesCount = post.getVotes().size();
-
-        post.getVotes().forEach(vote -> {
-            if (vote.getUser().getId() == 2)
-                System.out.println(vote.toString());
-        });
 
         loginAsUser();
 
@@ -331,7 +329,7 @@ class ApiPostControllerTest {
     @Test
     @Transactional
     @DisplayName("Dislike post")
-    void dislikePost() throws Exception {
+    void addDislike() throws Exception {
 
         int postId = 3;
         Post post = postRepository.findById(postId).get();

@@ -2,11 +2,7 @@ package blogengine.models;
 
 import blogengine.models.postconstants.UserConstraints;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Setter;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -23,6 +19,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(updatable = false)
     private int id;
 
     @NotNull

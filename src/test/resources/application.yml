@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
@@ -59,11 +59,11 @@ blog_info:
   copyright_form: "2005"
 
 image:
-  crop_height: 36
-  crop_width: 36
+  avatar_height: 36
+  avatar_width: 36
   max_size: 5242880
-  max_height: 400
-  max_width: 400
+  max_image_height: 400
+  max_image_width: 400
 
 location:
   avatars: "avatars/"

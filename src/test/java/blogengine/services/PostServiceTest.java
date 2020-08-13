@@ -27,11 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 @Slf4j
-@Sql(value = "/data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/delete-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+//@Sql(value = "/data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+//@Sql(value = "/delete-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -47,85 +49,130 @@ class PostServiceTest {
     private PostRepository postRepository;
 
     private final User user = new User();
-    private final LocalDateTime time = LocalDateTime.now();
-    private Post activePost = new Post();
-    private Post inactivePost = new Post();
+    private final LocalDateTime time = LocalDateTime.of(2020, 3, 17, 23, 6);
+    private final String text = "text".repeat(25);
+    private final Post activePost1 = new Post();
+    private final Post activePost2 = new Post();
+    private final Post inactivePost = new Post();
 
     @BeforeEach
     public void init() {
-        activePost.setId(1);
-        activePost.setActive(true);
-        activePost.setModerationStatus(ModerationStatus.ACCEPTED);
-        activePost.setUser(user);
-        activePost.setTitle("Title");
-        activePost.setText("TextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextText");
-        activePost.setTime(time);
-        activePost.setViewCount(5);
+        activePost1.setId(1);
+        activePost1.setActive(true);
+        activePost1.setModerationStatus(ModerationStatus.ACCEPTED);
+        activePost1.setUser(user);
+        activePost1.setTitle("Title");
+        activePost1.setText(text);
+        activePost1.setTime(time);
+        activePost1.setViewCount(5);
 
-        inactivePost.setId(2);
+        activePost2.setId(2);
+        activePost2.setActive(true);
+        activePost2.setModerationStatus(ModerationStatus.ACCEPTED);
+        activePost2.setUser(user);
+        activePost2.setTitle("Title");
+        activePost2.setText(text);
+        activePost2.setTime(time.minusYears(1));
+        activePost2.setViewCount(10);
+
+        inactivePost.setId(3);
         inactivePost.setActive(false);
-        inactivePost.setModerationStatus(ModerationStatus.ACCEPTED);
+        inactivePost.setModerationStatus(ModerationStatus.NEW);
         inactivePost.setUser(user);
         inactivePost.setTitle("Title");
-        inactivePost.setText("TextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextText");
+        inactivePost.setText(text);
         inactivePost.setTime(time);
-        inactivePost.setViewCount(5);
+        inactivePost.setViewCount(0);
 
     }
 
     @Test
-    void findPostById() {
+    void testFindPostById() {
 
-        doReturn(Optional.of(activePost)).when(postRepository).findById(1);
+        doReturn(Optional.of(activePost1)).when(postRepository).findById(1);
         Post returnedPost = postService.findPostById(1);
-        Assertions.assertEquals(returnedPost, activePost);
+        Assertions.assertEquals(returnedPost, activePost1);
     }
 
     @Test
-    void save() {
+    void testSave() {
 
     }
 
     @Test
-    void getAllActivePosts() {
+    void testFindAllActivePosts() {
+
+        List<Post> activePosts = List.of(activePost1, activePost2);
+        doReturn(activePosts).when(postRepository).findActivePosts();
+        List<Post> actualList = postService.findAllActivePosts();
+        Assertions.assertEquals(actualList, activePosts);
     }
 
     @Test
-    void countUserPosts() {
+    void testFindAllDatesInYear() {
+
+        List<LocalDateTime> times = List.of(activePost1.getTime(), activePost2.getTime());
+        when(postRepository.findAllByYear(2020)).thenReturn(times);
+        final List<LocalDateTime> actualList = postService.findAllDatesInYear(2020);
+        Assertions.assertEquals(2, actualList.size());
     }
 
     @Test
-    void countUserPostsViews() {
+    void testFindAllYears() {
+
+        List<Integer> years = List.of(2020);
+        when(postRepository.findAllYears()).thenReturn(years);
+        final List<Integer> actualList = postService.findAllYears();
+        Assertions.assertEquals(1, actualList.size());
+    }
+
+
+    @Test
+    void testCountUserPosts() {
+
+        when(postRepository.countActivePostsOfUser(user, ModerationStatus.ACCEPTED)).thenReturn(Long.valueOf(2));
+        Long actual = postService.countUserPosts(user);
+        Assertions.assertEquals(2, actual);
     }
 
     @Test
-    void findFirstPost() {
+    void testCountUserPostsViews() {
+
+        Long expectedViews = (long) (activePost1.getViewCount() + activePost2.getViewCount());
+        when(postRepository.countUserPostsViews(user))
+                .thenReturn(expectedViews);
+        Long actual = postService.countUserPostsViews(user);
+        Assertions.assertEquals(expectedViews, actual);
     }
 
     @Test
-    void findPosts() {
+    void testFindFirstPost() {
 
-        Post post1 = new Post();
-        post1.setTime(LocalDateTime.now(ZoneOffset.UTC));
+        Post expectedPost = activePost1;
+        when(postRepository.findFirstPost()).thenReturn(Optional.of(expectedPost));
+        Post actualPost = postService.findFirstPost();
+        Assertions.assertEquals(expectedPost, actualPost);
+    }
 
-        Post post2 = new Post();
-        post2.setTime(LocalDateTime.now(ZoneOffset.UTC));
+    @Test
+    void testFindPosts() {
 
-        List<Post> posts = List.of(post1, post2);
-        Pageable pageable = PageRequest.of(0/10, 10);
-        final PostsInfoResponse<PostDto> postDtoPostsInfoResponse = new PostsInfoResponse<>(2, getPostDTOs(posts));
-        doReturn(postDtoPostsInfoResponse)
-                .when(postRepository).getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
-
-        final PostsInfoResponse<PostDto> early = postService.findPosts(0, 10, "early");
-
-        Assertions.assertEquals(early, postDtoPostsInfoResponse);
-
-
+//        List<Post> posts = List.of(activePost1, activePost2);
+//        Pageable pageable = PageRequest.of(0 / 10, 10);
+//        final PostsInfoResponse<PostDto> postDtoPostsInfoResponse = new PostsInfoResponse<>(2, getPostDTOs(posts));
+//        doReturn(posts).when(postRepository)
+//                .getRecentPosts(ModerationStatus.ACCEPTED, LocalDateTime.now(ZoneOffset.UTC), pageable);
+//
+//        final PostsInfoResponse<PostDto> recent = postService.findPosts(0, 10, "recent");
+//
+//        Assertions.assertEquals(postDtoPostsInfoResponse, recent);
     }
 
     @Test
     void findCurrentUserPosts() {
+
+        List<Post> actualPosts = List.of(activePost1, activePost2);
+
     }
 
     @Test
@@ -178,4 +225,5 @@ class PostServiceTest {
         });
         return postDtos;
     }
+
 }

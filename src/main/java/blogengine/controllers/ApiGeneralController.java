@@ -9,9 +9,7 @@ import blogengine.models.dto.blogdto.commentdto.CommentRequest;
 import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.tagdto.TagsResponse;
 import blogengine.models.dto.userdto.EditProfileRequest;
-import blogengine.services.CaptchaService;
 import blogengine.services.GeneralService;
-import blogengine.services.PostService;
 import blogengine.services.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +31,6 @@ public class ApiGeneralController {
 
     private final TagService tagService;
     private final GeneralService generalService;
-    private final PostService postService;
-    private final CaptchaService captchaService;
 
     @Value("${blog_info.title}")
     private String title;
@@ -83,12 +79,12 @@ public class ApiGeneralController {
 
     @PostMapping("comment")
     public ResponseEntity<CommentResponse> addComment(@Valid @RequestBody final CommentRequest commentRequest) {
-        return ResponseEntity.ok().body(postService.addComment(commentRequest));
+        return ResponseEntity.ok().body(generalService.addComment(commentRequest));
     }
 
     @PostMapping(value = "image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String uploadImage(@RequestParam(name = "image") final MultipartFile file) throws IOException {
-        return generalService.uploadPostImage(file);
+        return generalService.uploadImage(file);
     }
 
     @PostMapping(value = "profile/my", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

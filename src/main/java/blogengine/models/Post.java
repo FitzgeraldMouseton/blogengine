@@ -54,7 +54,6 @@ public class Post {
     @Size(min = PostConstraints.MIN_TEXT_SIZE)
     private String text;
 
-    @NotNull
     @Column(name = "view_count")
     private int viewCount;
 

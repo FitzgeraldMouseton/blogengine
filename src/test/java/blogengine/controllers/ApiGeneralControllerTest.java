@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Slf4j
 @Sql(value = "/data-test.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/delete-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+//@Sql(value = "/delete-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -171,45 +171,6 @@ class ApiGeneralControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(mvcResult -> Assertions.assertEquals(initialCommentsCount + 1,
                         postRepository.findById(postId).get().getComments().size()));
-    }
-
-    @Test
-    @Transactional
-    @DisplayName("Add comment - failure (too short)")
-    void addCommentFailure() throws Exception {
-
-        int postId = 1;
-        int initialCommentsCount = postRepository.findById(postId).get().getComments().size();
-        CommentRequest request = new CommentRequest(null, String.valueOf(postId), "Tex");
-        String json = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(post(path + "/comment")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(mvcResult -> Assertions.assertEquals(initialCommentsCount, postRepository.findById(postId).get().getComments().size()))
-                .andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.errors", hasEntry("text", "Текст комментария не задан или слишком короткий")));
-    }
-
-    @Test
-    @DisplayName("Upload picture")
-    void uploadImage() throws Exception {
-
-        loginAsUser(1);
-        MockMultipartFile image = new MockMultipartFile(
-                "image",
-                "picture.txt",
-                MediaType.TEXT_PLAIN_VALUE,
-                "picture".getBytes()
-        );
-
-        mockMvc.perform(multipart(path + "/image")
-                .file(image)
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andDo(print())
-                .andExpect(status().isOk());
     }
 
     @Test
