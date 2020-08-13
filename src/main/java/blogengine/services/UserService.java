@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import java.util.Objects;
-
 @Slf4j
 @Service
 @AllArgsConstructor
@@ -18,7 +16,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final SessionStorage sessionStorage;
 
-    User findById(final Integer id) {
+    public User findById(final Integer id) {
         return userRepository.findById(id).orElse(null);
     }
 
@@ -26,7 +24,7 @@ public class UserService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    User findByCode(final String code) {
+    public User findByCode(final String code) {
         return userRepository.findByCode(code).orElse(null);
     }
 

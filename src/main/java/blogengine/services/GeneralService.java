@@ -1,14 +1,13 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.models.GlobalSetting;
-import blogengine.models.ModerationStatus;
-import blogengine.models.Post;
-import blogengine.models.User;
+import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
 import blogengine.models.dto.blogdto.ModerationRequest;
 import blogengine.models.dto.blogdto.StatisticsDto;
+import blogengine.models.dto.blogdto.commentdto.CommentRequest;
+import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.userdto.EditProfileRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -46,18 +44,20 @@ public class GeneralService {
     private final UserService userService;
     private final VoteService voteService;
     private final SettingService settingService;
-
-//    @Autowired
-//    private JdbcTemplate jdbcTemplate;
+    private final CommentService commentService;
 
     private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     private static final int FOLDER_NAME_LENGTH = 4;
     private static final int NUMBER_OF_FOLDERS_IN_IMAGE_PATH = 3;
 
-    @Value("${image.crop_width}")
-    private int cropWidth;
-    @Value("${image.crop_height}")
-    private int cropHeight;
+    @Value("${image.avatar_width}")
+    private int avatarWidth;
+    @Value("${image.avatar_height}")
+    private int avatarHeight;
+    @Value("${image.max_image_width}")
+    private int maxImageWidth;
+    @Value("${image.max_image_height}")
+    private int maxImageHeight;
     @Value("${password.min_length}")
     private int passwordMinLength;
     @Value("${location.images}")
@@ -141,6 +141,26 @@ public class GeneralService {
 //        return calendarDto;
 //    }
 
+    @Transactional
+    public CommentResponse addComment(final CommentRequest request) {
+        User user = userService.getCurrentUser();
+        Comment comment = new Comment();
+        Post post = postService.findPostById(Integer.parseInt(request.getPostId()));
+        if (request.getParentId() != null && !request.getParentId().isEmpty()) {
+            Comment parent = commentService.findById(Integer.parseInt(request.getParentId()));
+            comment.setParent(parent);
+        }
+        comment.setText(request.getText());
+        comment.setTime(LocalDateTime.now());
+//        comment.setPost(post);
+//        post.getComments().add(comment);
+//        comment.setUser(user);
+//        commentService.save(comment);
+        post.addComment(comment);
+        user.addComment(comment);
+        return new CommentResponse(comment.getId());
+    }
+
     public Map<String, Boolean> getSettings() {
         Map<String, Boolean> response = new HashMap<>();
         List<GlobalSetting> settings = settingService.getSettings();
@@ -184,34 +204,60 @@ public class GeneralService {
         return new SimpleResponseDto(true);
     }
 
-    public String uploadPostImage(final MultipartFile image) throws IOException {
-        return uploadImage(image, imagesLocation);
+    public String uploadImage(final MultipartFile image) throws IOException {
+        String uploadPath = getPathForUpload(imagesLocation, image.getOriginalFilename());
+        BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+        File newFile = new File(uploadPath);
+        float height = bufferedImage.getHeight();
+        float width = bufferedImage.getWidth();
+        if (height > maxImageHeight || width > maxImageWidth) {
+
+            float i;
+            if (height > width) {
+                i = width / height;
+                bufferedImage = getCroppedImage(bufferedImage, (int) (maxImageWidth * i), maxImageHeight);
+            } else {
+                i = height / width;
+                bufferedImage = getCroppedImage(bufferedImage, maxImageWidth, (int) (maxImageHeight * i));
+            }
+        }
+        ImageIO.write(bufferedImage, "jpg", newFile);
+        return "/" + uploadPath;
+//        image.transferTo(Path.of(uploadPath));
     }
 
     // ================================== Additional methods =========================================
 
+    private String getPathForUpload(final String location, final String fileName) throws IOException {
+        StringBuilder builder = new StringBuilder(location);
+        for (int i = 0; i < NUMBER_OF_FOLDERS_IN_IMAGE_PATH; i++) {
+            String rand = RandomStringUtils.randomAlphabetic(FOLDER_NAME_LENGTH).toLowerCase();
+            builder.append(rand).append("/");
+        }
+        builder.append(fileName);
+        Path path = Path.of(builder.toString());
+        Files.createDirectories(path);
+        return builder.toString();
+    }
+
     private String uploadUserAvatar(final MultipartFile image) throws IOException {
         BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
-        String path = getPathForUpload(avatarsLocation);
-        path += image.getOriginalFilename();
+        String path = getPathForUpload(avatarsLocation, image.getOriginalFilename());
         File newFile = new File(path);
-        if (bufferedImage.getHeight() > cropHeight || bufferedImage.getWidth() > cropHeight) {
-
-            BufferedImage preliminaryResizedImage = resizeImage(bufferedImage, cropWidth * 2,
-                                    cropHeight * 2, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            bufferedImage = resizeImage(preliminaryResizedImage,
-                                            cropWidth, cropHeight, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        if (bufferedImage.getHeight() > avatarHeight || bufferedImage.getWidth() > maxImageWidth) {
+            bufferedImage = getCroppedImage(bufferedImage, avatarWidth, avatarHeight);
         }
         ImageIO.write(bufferedImage, "jpg", newFile);
         return "/" + path;
     }
 
-    private String uploadImage(final MultipartFile image, final String imagesRootFolder) throws IOException {
+    private BufferedImage getCroppedImage(BufferedImage bufferedImage, int width, int height) {
 
-        String pathToImage = getPathForUpload(imagesRootFolder);
-        pathToImage += image.getOriginalFilename();
-        image.transferTo(Path.of(pathToImage));
-        return "/" + pathToImage;
+        BufferedImage preliminaryResizedImage = resizeImage(bufferedImage, width * 2,
+                                height * 2, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        bufferedImage = resizeImage(preliminaryResizedImage,
+                                        width, height, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        return bufferedImage;
     }
 
     private void removeUserAvatar(final User user) {
@@ -238,17 +284,6 @@ public class GeneralService {
         }
         user.setPhoto(null);
         userService.save(user);
-    }
-
-    private String getPathForUpload(final String string) throws IOException {
-        StringBuilder builder = new StringBuilder(string);
-        for (int i = 0; i < NUMBER_OF_FOLDERS_IN_IMAGE_PATH; i++) {
-            String rand = RandomStringUtils.randomAlphabetic(FOLDER_NAME_LENGTH).toLowerCase();
-            builder.append(rand).append("/");
-        }
-        Path path = Path.of(builder.toString());
-        Files.createDirectories(path);
-        return builder.toString();
     }
 
     private User getEditedUser(final EditProfileRequest request) {

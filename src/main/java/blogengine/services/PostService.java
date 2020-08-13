@@ -6,8 +6,6 @@ import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.ModerationResponse;
-import blogengine.models.dto.blogdto.commentdto.CommentRequest;
-import blogengine.models.dto.blogdto.commentdto.CommentResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.dto.blogdto.postdto.PostsInfoResponse;
@@ -20,7 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,8 @@ public class PostService {
     private final VoteService voteService;
     private final SettingService settingService;
     private final TagService tagService;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     //================================= Methods for working with repository =======================
 
@@ -216,22 +220,15 @@ public class PostService {
     @Transactional
     public SimpleResponseDto addPost(final AddPostRequest request) {
         User user = userService.getCurrentUser();
-        int initialPostsCount = postRepository.findActivePosts().size();
-        log.info("Active posts before: " + initialPostsCount);
         if (!settingService.isMultiUserEnabled() && !user.isModerator()) {
             throw new NotEnoughPrivilegesException("Публиковать посты может только модератор");
         } else {
             Post post = postDtoMapper.addPostRequestToPost(request);
-            user.addPost(post);
-            initialPostsCount = postRepository.findActivePosts().size();
-            log.info("Active posts after: " + initialPostsCount);
-            log.info("isActive: " + post.isActive());
-            log.info("Status: " + post.getModerationStatus());
-            log.info(String.valueOf(post.getTime().isBefore(LocalDateTime.now(ZoneOffset.UTC))));
-            log.info("Post time: " + post.getTime());
-            log.info("now(): " + LocalDateTime.now(ZoneOffset.UTC));
-            Duration duration = Duration.between(post.getTime(), LocalDateTime.now(ZoneOffset.UTC));
-            log.info("Duration: " + duration);
+//            user.addPost(post);
+            post.setUser(user);
+            user.getPosts().add(post);
+//            user.getPosts().add(post);
+            postRepository.save(post);
             return new SimpleResponseDto(true);
         }
     }
@@ -272,22 +269,6 @@ public class PostService {
     }
 
     @Transactional
-    public CommentResponse addComment(final CommentRequest request) {
-        User user = userService.getCurrentUser();
-        Comment comment = new Comment();
-        Post post = postRepository.findById(Integer.parseInt(request.getPostId())).orElse(null);
-        if (request.getParentId() != null && !request.getParentId().isEmpty()) {
-            Comment parent = commentService.findById(Integer.parseInt(request.getParentId()));
-            comment.setParent(parent);
-        }
-        comment.setText(request.getText());
-        comment.setTime(LocalDateTime.now());
-        user.addComment(comment);
-        post.addComment(comment);
-        return new CommentResponse(comment.getId());
-    }
-
-    @Transactional
     public SimpleResponseDto likePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
         if (user == null) {
@@ -299,9 +280,10 @@ public class PostService {
             return new SimpleResponseDto(false);
         }
         like = voteService.getLike();
-        user.addVote(like);
-        post.addVote(like);
+        like.setPost(post);
+        like.setUser(user);
         voteService.deleteDislikeIfExists(post, user);
+        voteService.save(like);
         return new SimpleResponseDto(true);
     }
 
@@ -317,9 +299,10 @@ public class PostService {
             return new SimpleResponseDto(false);
         }
         dislike = voteService.getDislike();
-        user.addVote(dislike);
-        post.addVote(dislike);
+        dislike.setUser(user);
+        dislike.setPost(post);
         voteService.deleteLikeIfExists(post, user);
+        voteService.save(dislike);
         return new SimpleResponseDto(true);
     }
 

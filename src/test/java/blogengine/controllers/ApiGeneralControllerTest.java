@@ -174,45 +174,6 @@ class ApiGeneralControllerTest {
     }
 
     @Test
-    @Transactional
-    @DisplayName("Add comment - failure (too short)")
-    void addCommentFailure() throws Exception {
-
-        int postId = 1;
-        int initialCommentsCount = postRepository.findById(postId).get().getComments().size();
-        CommentRequest request = new CommentRequest(null, String.valueOf(postId), "Tex");
-        String json = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(post(path + "/comment")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(mvcResult -> Assertions.assertEquals(initialCommentsCount, postRepository.findById(postId).get().getComments().size()))
-                .andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResolvedException() instanceof MethodArgumentNotValidException))
-                .andExpect(jsonPath("$.errors", hasEntry("text", "Текст комментария не задан или слишком короткий")));
-    }
-
-    @Test
-    @DisplayName("Upload picture")
-    void uploadImage() throws Exception {
-
-        loginAsUser(1);
-        MockMultipartFile image = new MockMultipartFile(
-                "image",
-                "picture.txt",
-                MediaType.TEXT_PLAIN_VALUE,
-                "picture".getBytes()
-        );
-
-        mockMvc.perform(multipart(path + "/image")
-                .file(image)
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
     void editProfileWithPhoto() throws Exception {
 
         loginAsUser(1);
