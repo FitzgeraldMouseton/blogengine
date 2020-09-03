@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
@@ -9,18 +9,17 @@ spring:
 #    show-sql: true
   datasource:
     url: ${DB_URL_PROD}
-#    url: jdbc:mysql://blogenginedb.cmb2qaowb18h.us-east-2.rds.amazonaws.com:3306/blogenginedb
     username: ${DB_USERNAME_PROD}
     password: ${DB_PASSWORD_PROD}
-    initialization-mode: always
+    initialization-mode: never
   mail:
     host: smtp.yandex.ru
     username: ${EMAIL_USERNAME}
     password: ${EMAIL_PASSWORD}
     port: 465
     protocol: smtps
-  profiles:
-    active: '@spring.profiles.active@'
+#  profiles:
+#    active: '@spring.profiles.active@'
 
 server:
   port: 5000

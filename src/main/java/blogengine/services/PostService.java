@@ -2,6 +2,7 @@ package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
 import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
+import blogengine.exceptions.blogexeptions.NoSuchPostException;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
@@ -34,12 +35,9 @@ public class PostService {
     private final PostDtoMapper postDtoMapper;
     private final PostRepository postRepository;
     private final UserService userService;
-    private final CommentService commentService;
     private final VoteService voteService;
     private final SettingService settingService;
     private final TagService tagService;
-    @PersistenceContext
-    private EntityManager entityManager;
 
     //================================= Methods for working with repository =======================
 
@@ -187,15 +185,22 @@ public class PostService {
         return new PostsInfoResponse<>(posts.size(), postDtos);
     }
 
-    public PostDto findValidPostById(final int id) {
-        Optional<Post> postOptional = postRepository.getValidPostById(id, ModerationStatus.ACCEPTED, LocalDateTime.now());
-        Post post = null;
+    public PostDto getPost(final int id) {
+        User user = userService.getCurrentUser();
+        Optional<Post> postOptional = postRepository.findById(id);
+        PostDto postDto = null;
         if (postOptional.isPresent()) {
-            post = postOptional.get();
-            post.setViewCount(post.getViewCount() + 1);
-            postRepository.save(post);
+            Post post = postOptional.get();
+            if (user.equals(post.getUser()) || user.isModerator()) {
+                postDto = postDtoMapper.singlePostToPostDto(post);
+            } else if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && post.getTime().isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
+                post.setViewCount(post.getViewCount() + 1);
+                postRepository.save(post);
+                postDto = postDtoMapper.singlePostToPostDto(post);
+            }
+            return postDto;
         }
-        return postDtoMapper.singlePostToPostDto(post);
+        throw new NoSuchPostException("Пост не найден");
     }
 
     public PostsInfoResponse<PostDto> findPostsByYear(final int year) {
@@ -240,12 +245,13 @@ public class PostService {
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
+        post.setActive(request.isActive());
         LocalDateTime requestTime = LocalDateTime.ofEpochSecond(request.getTimestamp(), 0, ZoneOffset.UTC);
         LocalDateTime postTime = requestTime
                 .isBefore(LocalDateTime.now(ZoneOffset.UTC)) ? LocalDateTime.now(ZoneOffset.UTC) : requestTime;
         post.setTime(postTime);
         post.setActive(request.isActive());
-        if (user.isModerator() || settingService.isPremoderationEnabled()) {
+        if (user.isModerator() || !settingService.isPremoderationEnabled()) {
             post.setModerationStatus(ModerationStatus.ACCEPTED);
         } else {
             post.setModerationStatus(ModerationStatus.NEW);

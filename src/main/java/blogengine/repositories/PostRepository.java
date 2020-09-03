@@ -45,12 +45,15 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
             + "AND (p.text LIKE %:query% or p.title LIKE %:query%)")
     List<Post> findPostsByQuery(ModerationStatus moderationStatus, LocalDateTime date, String query, Pageable pageable);
 
-    // ========================= Find post by id
+    // ========================= Find active accepted post by id
     Optional<Post> findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(int id, ModerationStatus moderationStatus, LocalDateTime date);
 
     default Optional<Post> getValidPostById(int id, ModerationStatus moderationStatus, LocalDateTime date) {
         return findByIdAndModerationStatusAndTimeBeforeAndActiveTrue(id, moderationStatus, date);
     }
+
+    // ========================= Find post by id for current user
+    Optional<Post> findByIdAndUser(int id, User user);
 
     // ========================= Find posts by date
     @Query("SELECT p FROM Post p WHERE p.active = 1 AND p.moderationStatus = :moderationStatus AND p.time between :startOfDay and :endOfDay")
