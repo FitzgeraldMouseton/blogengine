@@ -24,6 +24,7 @@
         <setting name="validation-enabled" value="true" />
         <setting name="provider-name" value="Hibernate" />
         <datasource-mapping>
+          <factory-entry name="blogengine" />
           <factory-entry name="entityManagerFactory" value="485d699f-7015-484a-b432-59a16258b08b" />
         </datasource-mapping>
         <naming-strategy-map />

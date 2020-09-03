@@ -1,4 +1,4 @@
-Insert into USERS (ID, CODE, EMAIL, IS_MODERATOR, NAME, PASSWORD, PHOTO, REG_TIME) values
+Insert into users (id, code, email, is_moderator, name, password, photo, reg_time) values
 (1, '0000', 'ernest@gmail.com', 0, 'Эрнест Хемингуэй', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-12-26 00:00:01'),
 (2, '0000', 'gleb@gmail.com', 1, 'Глеб Успенский', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-02-15 00:00:01'),
 (3, '0000', 'gabriel@gmail.com', 1, 'Габриэль Гарсия Маркес', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-01-26 00:00:01'),

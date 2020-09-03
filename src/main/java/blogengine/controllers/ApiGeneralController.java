@@ -53,7 +53,6 @@ public class ApiGeneralController {
 
     @PostMapping("moderation")
     public void moderation(@RequestBody final ModerationRequest request) {
-        log.info("moderation");
         generalService.moderation(request);
     }
 

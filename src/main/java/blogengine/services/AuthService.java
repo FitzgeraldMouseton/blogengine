@@ -44,6 +44,8 @@ public class AuthService {
     private int restoreCodeLength;
     @Value("${restore_code.expiration_time}")
     private int restoreCodeExpirationTime;
+    @Value("${restore_code.path}")
+    private int restoreCodePath;
 
     @Transactional
     public AuthenticationResponse login(final LoginRequest loginRequest) {
@@ -96,7 +98,7 @@ public class AuthService {
         user.setCode(code);
         userService.save(user);
         dbEventsCreator.deleteRestoreCodeWhenExpired(code, restoreCodeExpirationTime);
-        String message = "Для восстановления пароля перейдите по ссылке http://localhost:8080/login/change-password/" + code;
+        String message = "Для восстановления пароля перейдите по ссылке " + restoreCodePath + code;
         emailService.send(email, "Восстановление пароля", message);
         return new SimpleResponseDto(true);
     }
