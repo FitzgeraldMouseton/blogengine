@@ -17,6 +17,7 @@ public class PostDto {
 
     private int id;
     private long timestamp;
+    private boolean active;
     private UserDto user;
     private String title;
     private String announce;

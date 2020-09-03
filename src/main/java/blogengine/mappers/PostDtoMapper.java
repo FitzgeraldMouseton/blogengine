@@ -52,6 +52,7 @@ public class PostDtoMapper {
         if (post != null) {
             PostDto postDTO = postToPostDto(post);
             postDTO.setText(post.getText());
+            postDTO.setActive(post.isActive());
             postDTO.setComments(post.getComments().stream()
                     .map(commentDtoMapper::commentToCommentDto).collect(Collectors.toList()));
             postDTO.setTags(post.getTags().stream().map(Tag::getName).toArray(String[]::new));

@@ -1,6 +1,6 @@
 Insert into users (id, code, email, is_moderator, name, password, photo, reg_time) values
 (1, '0000', 'ernest@gmail.com', 0, 'Эрнест Хемингуэй', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-12-26 00:00:01'),
-(2, '0000', 'gleb@gmail.com', 1, 'Глеб Успенский', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-02-15 00:00:01'),
+(2, '0000', 'gleb@gmail.com', 0, 'Глеб Успенский', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-02-15 00:00:01'),
 (3, '0000', 'gabriel@gmail.com', 1, 'Габриэль Гарсия Маркес', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-01-26 00:00:01'),
 (4, '0000', 'flannery@gmail.com', 0, 'Фланнери О''Коннор', '$2a$10$U9rK/SGnVm2fRcPvS6Lif.LUGDKF37dIfptIz504wnc29Z4hwS/hi', null, '2019-03-08 00:00:01'),
 (5, '0000', 'franz@gmail.com', 0, 'Франц Кафка', '123456', null, '2020-03-01 00:00:01');

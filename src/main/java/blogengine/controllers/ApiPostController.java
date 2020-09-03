@@ -40,7 +40,7 @@ public class ApiPostController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable Integer id) {
-        final PostDto postDto = postService.findValidPostById(id);
+        final PostDto postDto = postService.getPost(id);
         if (postDto == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
