@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +46,7 @@ public class GeneralService {
     private final VoteService voteService;
     private final SettingService settingService;
     private final CommentService commentService;
+    private final BCryptPasswordEncoder encoder;
 
     private DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     private static final int FOLDER_NAME_LENGTH = 4;
@@ -295,7 +297,7 @@ public class GeneralService {
             removeUserAvatar(user);
         }
         if (password != null && password.length() >= passwordMinLength) {
-            user.setPassword(request.getPassword());
+            user.setPassword(encoder.encode(request.getPassword()));
         }
         return user;
     }

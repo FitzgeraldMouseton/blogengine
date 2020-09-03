@@ -225,8 +225,8 @@ public class PostService {
         } else {
             Post post = postDtoMapper.addPostRequestToPost(request);
 //            user.addPost(post);
-            post.setUser(user);
-            user.getPosts().add(post);
+//            post.setUser(user);
+//            user.getPosts().add(post);
 //            user.getPosts().add(post);
             postRepository.save(post);
             return new SimpleResponseDto(true);

@@ -63,6 +63,7 @@ public class PostDtoMapper {
     public Post addPostRequestToPost(final AddPostRequest request) {
         Post post = new Post();
         User user = userService.getCurrentUser();
+        post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
         LocalDateTime requestTime = LocalDateTime.ofEpochSecond(request.getTimestamp(), 0, ZoneOffset.UTC);
@@ -81,6 +82,7 @@ public class PostDtoMapper {
                     return tagService.findTagByName(tagName).orElse(new Tag(tagName));
                 }).collect(Collectors.toSet());
         post.addTags(tags);
+        user.getPosts().add(post);
         return post;
     }
 

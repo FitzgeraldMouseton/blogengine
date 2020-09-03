@@ -8,9 +8,10 @@ spring:
         format_sql: true
 #    show-sql: true
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL_PROD}
+#    url: jdbc:mysql://blogenginedb.cmb2qaowb18h.us-east-2.rds.amazonaws.com:3306/blogenginedb
+    username: ${DB_USERNAME_PROD}
+    password: ${DB_PASSWORD_PROD}
     initialization-mode: always
   mail:
     host: smtp.yandex.ru
@@ -20,6 +21,9 @@ spring:
     protocol: smtps
   profiles:
     active: '@spring.profiles.active@'
+
+server:
+  port: 5000
 
   servlet:
     multipart:
@@ -35,7 +39,7 @@ spring:
 restore_code:
   code_length: 40
   expiration_time: 3600
-  path: "http://localhost:8080/login/change-password/"
+  path: "http://springbootblog-env.eba-gedscb4d.us-east-2.elasticbeanstalk.com/login/change-password/"
 captcha:
   expiration:
     time: 3600
@@ -81,22 +85,3 @@ location:
 
 tag:
   min_weight: 0.1
-
-
-
-
-
-
-
-
-
-
-
-
-
-#errormessages:
-#  captcha: 'Код с картинки введён неверно'
-#  name: 'Имя указано неверно'
-#  user:
-#    notfound: 'Не найден пользователь с таким адресом почты'
-#    exists: 'Этот e-mail уже зарегистрирован'

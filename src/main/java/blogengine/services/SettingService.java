@@ -3,6 +3,7 @@ package blogengine.services;
 import blogengine.models.GlobalSetting;
 import blogengine.repositories.SettingsRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SettingService {
@@ -56,6 +58,7 @@ public class SettingService {
     private boolean isSettingEnabled(String setting) {
         final Optional<GlobalSetting> settingOptional = settingsRepository.findByCode(setting);
         if (settingOptional.isPresent()) {
+            log.info(settingOptional.get().getName());
             return settingOptional.get().getValue();
         } else {
             return false;
