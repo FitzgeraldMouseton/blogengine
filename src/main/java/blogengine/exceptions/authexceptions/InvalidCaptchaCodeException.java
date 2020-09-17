@@ -1,10 +1,14 @@
 package blogengine.exceptions.authexceptions;
 
-import blogengine.exceptions.AbstractBadRequestException;
+import blogengine.exceptions.AbstractAuthException;
 
-public class InvalidCaptchaCodeException extends AbstractBadRequestException {
+public class InvalidCaptchaCodeException extends AbstractAuthException {
 
     public InvalidCaptchaCodeException(String message) {
         super(message);
+    }
+
+    public String prefix() {
+        return "captcha";
     }
 }

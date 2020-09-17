@@ -2,11 +2,10 @@ package blogengine.exceptions;
 
 public abstract class AbstractBadRequestException extends RuntimeException {
 
-    public AbstractBadRequestException(String message) {
-        super(message);
+    public AbstractBadRequestException() {
     }
 
-    public String prefix() {
-        return "message";
+    public AbstractBadRequestException(String message) {
+        super(message);
     }
 }

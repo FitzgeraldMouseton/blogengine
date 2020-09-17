@@ -18,8 +18,8 @@ spring:
     password: ${EMAIL_PASSWORD}
     port: 465
     protocol: smtps
-#  profiles:
-#    active: '@spring.profiles.active@'
+  profiles:
+    active: '@spring.profiles.active@'
 
 server:
   port: 5000

@@ -1,6 +1,7 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
@@ -70,6 +71,9 @@ public class GeneralService {
     @Transactional
     public void moderation(final ModerationRequest request) {
         User moderator = userService.getCurrentUser();
+        if (moderator == null) {
+            throw new UnauthenticatedUserException();
+        }
         Post post = postService.findPostById(request.getPostId());
         if ("decline".equals(request.getDecision())) {
             post.setModerationStatus(ModerationStatus.DECLINE);
@@ -83,6 +87,9 @@ public class GeneralService {
 
     public StatisticsDto getCurrentUserStatistics() {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         long postsCount = postService.countUserPosts(user);
         Post firstPost = postService.findFirstPostOfUser(user);
         long firstPostDate = firstPost.getTime().toEpochSecond(ZoneOffset.UTC);
@@ -146,6 +153,9 @@ public class GeneralService {
     @Transactional
     public CommentResponse addComment(final CommentRequest request) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         Comment comment = new Comment();
         Post post = postService.findPostById(Integer.parseInt(request.getPostId()));
         if (request.getParentId() != null && !request.getParentId().isEmpty()) {
@@ -174,8 +184,11 @@ public class GeneralService {
     }
 
     public void changeSettings(final Map<String, Boolean> request) {
-        User currentUser = userService.getCurrentUser();
-        if (currentUser != null && currentUser.isModerator()) {
+        User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
+        if (user.isModerator()) {
             request.keySet().forEach(k -> {
                 GlobalSetting setting = settingService.getSettingByCode(k);
                 if (setting == null) {

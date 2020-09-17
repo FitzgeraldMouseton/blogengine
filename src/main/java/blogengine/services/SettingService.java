@@ -42,7 +42,7 @@ public class SettingService {
         return isSettingEnabled(premoderationSetting);
     }
 
-    GlobalSetting getSettingByCode(final String code) {
+    public GlobalSetting getSettingByCode(final String code) {
         return settingsRepository.findByCode(code).orElse(null);
     }
 
@@ -50,15 +50,13 @@ public class SettingService {
         settings.forEach((k,v) -> settingsRepository.save(new GlobalSetting(k, v, false)));
     }
 
-    GlobalSetting setSetting(final String setting, final Boolean isActive) {
+    public GlobalSetting setSetting(final String setting, final Boolean isActive) {
         return new GlobalSetting(setting, settings.get(setting), isActive);
     }
-
 
     private boolean isSettingEnabled(String setting) {
         final Optional<GlobalSetting> settingOptional = settingsRepository.findByCode(setting);
         if (settingOptional.isPresent()) {
-            log.info(settingOptional.get().getName());
             return settingOptional.get().getValue();
         } else {
             return false;

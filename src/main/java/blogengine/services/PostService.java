@@ -2,7 +2,7 @@ package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
 import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
-import blogengine.exceptions.blogexeptions.NoSuchPostException;
+import blogengine.exceptions.blogexeptions.PageNotFoundException;
 import blogengine.mappers.PostDtoMapper;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
@@ -19,8 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -92,7 +90,6 @@ public class PostService {
     //================================= Main logic methods ==========================================
 
     public PostsInfoResponse<PostDto> findPosts(final int offset, final int limit, final String mode) {
-
         List<Post> posts;
         long postsCount = countActivePosts();
         Pageable pageable = PageRequest.of(offset/limit, limit);
@@ -119,6 +116,9 @@ public class PostService {
 
     public PostsInfoResponse<PostDto> findCurrentUserPosts(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         List<Post> posts;
         long postsCount;
         Pageable pageable = PageRequest.of(offset/limit, limit);
@@ -149,6 +149,9 @@ public class PostService {
 
     public PostsInfoResponse<ModerationResponse> findPostsForModeration(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         if(user.isModerator()) {
             long count;
             List<Post> posts;
@@ -200,7 +203,7 @@ public class PostService {
             }
             return postDto;
         }
-        throw new NoSuchPostException("Пост не найден");
+        throw new PageNotFoundException("Пост не найден");
     }
 
     public PostsInfoResponse<PostDto> findPostsByYear(final int year) {
@@ -225,6 +228,9 @@ public class PostService {
     @Transactional
     public SimpleResponseDto addPost(final AddPostRequest request) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         if (!settingService.isMultiUserEnabled() && !user.isModerator()) {
             throw new NotEnoughPrivilegesException("Публиковать посты может только модератор");
         } else {
@@ -242,6 +248,9 @@ public class PostService {
     public SimpleResponseDto editPost(final int id, final AddPostRequest request) {
         Post post = findPostById(id);
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
@@ -278,7 +287,7 @@ public class PostService {
     public SimpleResponseDto likePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
         if (user == null) {
-            throw new UnauthenticatedUserException("Для для того, чтобы оценивать посты, вам нужно авторизоваться");
+            throw new UnauthenticatedUserException();
         }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote like = voteService.findLike(post, user);
@@ -297,7 +306,7 @@ public class PostService {
     public SimpleResponseDto dislikePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
         if (user == null) {
-            throw new UnauthenticatedUserException("Для для того, чтобы оценивать посты, вам нужно авторизоваться");
+            throw new UnauthenticatedUserException();
         }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote dislike = voteService.findDislike(post, user);

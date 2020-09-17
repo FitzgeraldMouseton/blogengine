@@ -25,14 +25,14 @@ public class ApiPostController {
     private final PostService postService;
 
     @GetMapping
-    public PostsInfoResponse getPosts(@RequestParam final int offset,
-                                      @RequestParam final int limit,
-                                      @RequestParam final String mode) {
+    public PostsInfoResponse<PostDto> getPosts(@RequestParam final int offset,
+                                            @RequestParam final int limit,
+                                            @RequestParam final String mode) {
         return postService.findPosts(offset, limit, mode);
     }
 
     @GetMapping("/search")
-    public PostsInfoResponse searchPost(@RequestParam final int offset,
+    public PostsInfoResponse<PostDto> searchPost(@RequestParam final int offset,
                                         @RequestParam final int limit,
                                         @RequestParam final String query) {
         return postService.findAllByQuery(offset, limit, query);
@@ -48,7 +48,7 @@ public class ApiPostController {
     }
 
     @GetMapping("/byDate")
-    public PostsInfoResponse searchByDate(@RequestParam final int offset,
+    public PostsInfoResponse<PostDto> searchByDate(@RequestParam final int offset,
                                           @RequestParam final int limit,
                                           @RequestParam final String date) {
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -57,7 +57,7 @@ public class ApiPostController {
     }
 
     @GetMapping("/byTag")
-    public PostsInfoResponse searchByTag(@RequestParam final int offset,
+    public PostsInfoResponse<PostDto> searchByTag(@RequestParam final int offset,
                                          @RequestParam final int limit,
                                          @RequestParam final String tag) {
         return postService.findPostsByTag(offset, limit, tag);
@@ -84,7 +84,7 @@ public class ApiPostController {
     }
 
     @GetMapping("/my")
-    public PostsInfoResponse getCurrentUserPosts(@RequestParam final int offset,
+    public PostsInfoResponse<PostDto> getCurrentUserPosts(@RequestParam final int offset,
                                                  @RequestParam final int limit,
                                                  @RequestParam final String status) {
         return postService.findCurrentUserPosts(offset, limit, status);

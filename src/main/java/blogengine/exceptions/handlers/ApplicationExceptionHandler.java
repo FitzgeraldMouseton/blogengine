@@ -1,5 +1,6 @@
 package blogengine.exceptions.handlers;
 
+import blogengine.exceptions.AbstractAuthException;
 import blogengine.exceptions.AbstractBadRequestException;
 import blogengine.exceptions.AbstractUnauthenticatedException;
 import blogengine.models.dto.ErrorResponse;
@@ -13,46 +14,38 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @RestControllerAdvice
 public class ApplicationExceptionHandler {
 
     @ExceptionHandler({AbstractBadRequestException.class})
-    public final ResponseEntity<ErrorResponse> handleApplicationExceptions(final AbstractBadRequestException ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put(ex.prefix(), ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+    public final ResponseEntity<Object> handleApplicationExceptions(final AbstractBadRequestException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @ExceptionHandler(AbstractUnauthenticatedException.class)
-    protected final ResponseEntity<ErrorResponse> handleUnauthenticatedException(final AbstractUnauthenticatedException ex) {
+    protected final ResponseEntity<Object> handleUnauthenticatedException(final AbstractUnauthenticatedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @ExceptionHandler(AbstractAuthException.class)
+    protected final ResponseEntity<ErrorResponse> handleAuthException(final AbstractAuthException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(ex.prefix(), ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(errors));
+        return ResponseEntity.ok().body(new ErrorResponse(errors));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected final ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex) {
 
         Map<String, String> errors = new HashMap<>();
-        AtomicBoolean isUnauthorized = new AtomicBoolean(false);
         ex.getBindingResult()
                 .getFieldErrors()
-                .forEach(error -> {
-                    errors.put(error.getField(), error.getDefaultMessage());
-                    if ("captcha".equals(error.getField())) {
-                        isUnauthorized.set(true);
-                    }
-                    log.info(error.getField());
-                } );
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         errors.forEach((k, v) -> log.info(k + ": " + v));
-        if (isUnauthorized.get()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(errors));
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
+        return ResponseEntity.ok().body(new ErrorResponse(errors));
     }
 
     @ExceptionHandler(FileUploadBase.FileSizeLimitExceededException.class)

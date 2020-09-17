@@ -2,7 +2,7 @@ package blogengine.services;
 
 import blogengine.exceptions.authexceptions.IncorrectCredentialsException;
 import blogengine.exceptions.authexceptions.InvalidCaptchaCodeException;
-import blogengine.exceptions.authexceptions.UserNotFoundException;
+import blogengine.exceptions.blogexeptions.PageNotFoundException;
 import blogengine.mappers.UserDtoMapper;
 import blogengine.models.CaptchaCode;
 import blogengine.models.User;
@@ -32,6 +32,7 @@ import java.util.Base64;
 public class AuthService {
 
     private final UserService userService;
+    private final SettingService settingService;
     private final EmailServiceImpl emailService;
     private final CaptchaService captchaService;
     private final SessionStorage sessionStorage;
@@ -50,11 +51,8 @@ public class AuthService {
     public AuthenticationResponse login(final LoginRequest loginRequest) {
         AuthenticationResponse loginResponse;
         User user = userService.findByEmail(loginRequest.getEmail());
-        if (user == null) {
-            throw new UserNotFoundException("Не найден пользователь с таким адресом почты: " + loginRequest.getEmail());
-        }
-        if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new IncorrectCredentialsException("Неверно введены данные");
+        if (user == null || !encoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new IncorrectCredentialsException("Логин и/или пароль введен(ы) неверно");
         }
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         Integer userId = user.getId();
@@ -66,6 +64,9 @@ public class AuthService {
 
     @Transactional
     public SimpleResponseDto register(final RegisterRequest registerRequest) {
+        if (!settingService.isMultiUserEnabled()) {
+            throw new PageNotFoundException();
+        }
         CaptchaCode captchaCode = captchaService.findBySecretCode(registerRequest.getCaptchaSecret());
         if (!captchaCode.getCode().equals(registerRequest.getCaptcha())) {
             throw new InvalidCaptchaCodeException("Код с картинки введён неверно");
