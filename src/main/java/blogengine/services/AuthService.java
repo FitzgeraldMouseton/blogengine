@@ -49,7 +49,6 @@ public class AuthService {
 
     @Transactional
     public AuthenticationResponse login(final LoginRequest loginRequest) {
-        AuthenticationResponse loginResponse;
         User user = userService.findByEmail(loginRequest.getEmail());
         if (user == null || !encoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new IncorrectCredentialsException("Логин и/или пароль введен(ы) неверно");
@@ -58,8 +57,7 @@ public class AuthService {
         Integer userId = user.getId();
         sessionStorage.getSessions().put(sessionId, userId);
         UserLoginResponse loginDto = userDtoMapper.userToLoginResponse(user);
-        loginResponse = new AuthenticationResponse(true, loginDto);
-        return loginResponse;
+        return new AuthenticationResponse(true, loginDto);
     }
 
     @Transactional

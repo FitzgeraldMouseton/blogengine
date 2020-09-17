@@ -116,7 +116,7 @@ class ApiAuthControllerTest {
         mockMvc.perform(post(path + "/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isOk())
                 .andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResolvedException() instanceof MethodArgumentNotValidException))
                 .andExpect(jsonPath("$.errors", hasEntry("captchaSecret", "Код капчи устарел")));
     }
@@ -138,7 +138,7 @@ class ApiAuthControllerTest {
         mockMvc.perform(post(path + "/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isOk())
                 .andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResolvedException() instanceof MethodArgumentNotValidException))
                 .andExpect(jsonPath("$.errors", hasEntry("email", "Этот e-mail уже зарегистрирован")));
     }

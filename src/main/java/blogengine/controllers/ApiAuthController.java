@@ -33,7 +33,7 @@ public class ApiAuthController {
     }
 
     @GetMapping("check")
-    public ResponseEntity<?> check() {
+    public ResponseEntity<Object> check() {
         AuthenticationResponse response = authService.check();
         if (response == null) {
             return ResponseEntity.ok().body(new SimpleResponseDto(false));

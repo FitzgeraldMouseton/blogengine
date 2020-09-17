@@ -19,6 +19,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class ApplicationExceptionHandler {
 
+//    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({AbstractBadRequestException.class})
     public final ResponseEntity<Object> handleApplicationExceptions(final AbstractBadRequestException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -54,4 +55,9 @@ public class ApplicationExceptionHandler {
         errors.put(ex.getFieldName(), ex.getLocalizedMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(errors));
     }
+
+//    @ExceptionHandler({RuntimeException.class})
+//    public final void handleRuntimeExceptions(final RuntimeException ex) {
+//        log.info("rtytyui");
+//    }
 }

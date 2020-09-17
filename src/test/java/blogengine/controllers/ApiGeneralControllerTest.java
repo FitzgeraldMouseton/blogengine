@@ -87,7 +87,7 @@ class ApiGeneralControllerTest {
         mockMvc.perform(post(path + "/moderation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.ACCEPTED,
                         postRepository.findById(postId).get().getModerationStatus()));
     }
@@ -104,7 +104,7 @@ class ApiGeneralControllerTest {
         mockMvc.perform(post(path + "/moderation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.DECLINE,
                         postRepository.findById(postId).get().getModerationStatus()));
     }

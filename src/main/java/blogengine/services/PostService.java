@@ -203,7 +203,7 @@ public class PostService {
             }
             return postDto;
         }
-        throw new PageNotFoundException("Пост не найден");
+        throw new PageNotFoundException();
     }
 
     public PostsInfoResponse<PostDto> findPostsByYear(final int year) {

@@ -279,8 +279,6 @@ class ApiPostControllerTest {
                 .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.result", is(false)))
                 .andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResolvedException() instanceof NotEnoughPrivilegesException))
                 .andExpect(mvcResult -> Assertions.assertEquals("Публиковать посты может только модератор",
                         Objects.requireNonNull(mvcResult.getResolvedException()).getMessage()));

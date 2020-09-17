@@ -23,7 +23,6 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void send(final String mailTo, final String subject, final String message) {
-        log.info("");
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(username);
         mailMessage.setTo(mailTo);
