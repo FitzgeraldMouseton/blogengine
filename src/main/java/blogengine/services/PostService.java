@@ -14,6 +14,7 @@ import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,7 +35,6 @@ public class PostService {
     private final UserService userService;
     private final VoteService voteService;
     private final SettingService settingService;
-    private final TagService tagService;
 
     //================================= Methods for working with repository =======================
 
@@ -246,39 +245,7 @@ public class PostService {
 
     @Transactional
     public SimpleResponseDto editPost(final int id, final AddPostRequest request) {
-        Post post = findPostById(id);
-        User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
-        post.setUser(user);
-        post.setTitle(request.getTitle());
-        post.setText(request.getText());
-        post.setActive(request.isActive());
-        LocalDateTime requestTime = LocalDateTime.ofEpochSecond(request.getTimestamp(), 0, ZoneOffset.UTC);
-        LocalDateTime postTime = requestTime
-                .isBefore(LocalDateTime.now(ZoneOffset.UTC)) ? LocalDateTime.now(ZoneOffset.UTC) : requestTime;
-        post.setTime(postTime);
-        post.setActive(request.isActive());
-        if (user.isModerator() || !settingService.isPremoderationEnabled()) {
-            post.setModerationStatus(ModerationStatus.ACCEPTED);
-        } else {
-            post.setModerationStatus(ModerationStatus.NEW);
-        }
-        Set<Tag> tags = request.getTagNames().stream()
-                .map(tagName -> {
-                    tagName = tagName.toUpperCase();
-                    Tag tag;
-                    Optional<Tag> tagOptional = tagService.findTagByName(tagName);
-                    if (tagOptional.isEmpty()){
-                        tag = new Tag(tagName);
-                        tagService.save(tag);
-                    } else {
-                        tag = tagOptional.get();
-                    }
-                    return tag;
-                }).collect(Collectors.toSet());
-        post.addTags(tags);
+        Post post = postDtoMapper.editPostRequestToPost(id, request);
         save(post);
         return new SimpleResponseDto(true);
     }

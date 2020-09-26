@@ -1,4 +1,4 @@
-package blogengine.exceptions.handlers;
+package blogengine.exceptions.exeptionhandlers;
 
 import blogengine.exceptions.AbstractAuthException;
 import blogengine.exceptions.AbstractBadRequestException;

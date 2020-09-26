@@ -81,13 +81,14 @@ class ApiGeneralControllerTest {
     void moderationAccept() throws Exception {
 
         int postId = 7;
+        loginAsModerator();
         ModerationRequest request = new ModerationRequest(postId, "accept");
         String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(path + "/moderation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isOk())
                 .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.ACCEPTED,
                         postRepository.findById(postId).get().getModerationStatus()));
     }
@@ -98,13 +99,14 @@ class ApiGeneralControllerTest {
     void moderationDecline() throws Exception {
 
         int postId = 7;
+        loginAsModerator();
         ModerationRequest request = new ModerationRequest(postId, "decline");
         String json = objectMapper.writeValueAsString(request);
 
         mockMvc.perform(post(path + "/moderation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isOk())
                 .andExpect(mvcResult -> Assertions.assertEquals(ModerationStatus.DECLINE,
                         postRepository.findById(postId).get().getModerationStatus()));
     }

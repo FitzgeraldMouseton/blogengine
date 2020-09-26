@@ -1,20 +1,22 @@
 package blogengine.mappers;
 
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.*;
 import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
 import blogengine.models.dto.blogdto.postdto.PostDto;
 import blogengine.models.postconstants.PostConstraints;
+import blogengine.services.PostService;
 import blogengine.services.SettingService;
 import blogengine.services.TagService;
 import blogengine.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Set;
@@ -22,14 +24,24 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 public class PostDtoMapper {
 
+    private final PostService postService;
     private final UserDtoMapper userDtoMapper;
     private final CommentDtoMapper commentDtoMapper;
     private final UserService userService;
     private final SettingService settingService;
     private final TagService tagService;
+
+    public PostDtoMapper(@Lazy PostService postService, UserDtoMapper userDtoMapper, CommentDtoMapper commentDtoMapper, UserService userService, SettingService settingService, TagService tagService) {
+        this.postService = postService;
+        this.userDtoMapper = userDtoMapper;
+        this.commentDtoMapper = commentDtoMapper;
+        this.userService = userService;
+        this.settingService = settingService;
+        this.tagService = tagService;
+    }
 
     public PostDto postToPostDto(final Post post) {
         PostDto postDto = new PostDto();
@@ -63,7 +75,19 @@ public class PostDtoMapper {
 
     public Post addPostRequestToPost(final AddPostRequest request) {
         Post post = new Post();
+        return postDtoToPost(post, request);
+    }
+
+    public Post editPostRequestToPost(final int id, final AddPostRequest request) {
+        Post post = postService.findPostById(id);
+        return postDtoToPost(post, request);
+    }
+
+    public Post postDtoToPost(final Post post, final AddPostRequest request) {
         User user = userService.getCurrentUser();
+        if (user == null) {
+            throw new UnauthenticatedUserException();
+        }
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());
