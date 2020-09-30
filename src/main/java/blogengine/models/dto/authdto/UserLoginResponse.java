@@ -12,4 +12,5 @@ public class UserLoginResponse {
     private boolean moderation;
     private int moderationCount;
     private boolean settings;
+    private String password;
 }

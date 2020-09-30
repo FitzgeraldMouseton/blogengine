@@ -15,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,9 +53,6 @@ public class AuthService {
     @Transactional
     public AuthenticationResponse login(final LoginRequest loginRequest) {
         User user = userService.findByEmail(loginRequest.getEmail());
-        if (user == null || !encoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new IncorrectCredentialsException("Логин и/или пароль введен(ы) неверно");
-        }
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         Integer userId = user.getId();
         sessionStorage.getSessions().put(sessionId, userId);

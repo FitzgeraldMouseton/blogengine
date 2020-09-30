@@ -38,6 +38,7 @@ public class UserDtoMapper {
         loginDto.setPhoto(user.getPhoto());
         loginDto.setEmail(user.getEmail());
         loginDto.setModeration(user.isModerator());
+        loginDto.setPassword(user.getPassword());
         if (user.isModerator())
             loginDto.setModerationCount(postService.countPostsForModeration(user));
         else

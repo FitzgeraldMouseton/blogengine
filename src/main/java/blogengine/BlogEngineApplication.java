@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableAsync
 @EnableScheduling
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication
 public class BlogEngineApplication {
 
     public static void main(String[] args) {
