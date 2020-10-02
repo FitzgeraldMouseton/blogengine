@@ -3,6 +3,7 @@ package blogengine.exceptions.exeptionhandlers;
 import blogengine.exceptions.AbstractAuthException;
 import blogengine.exceptions.AbstractBadRequestException;
 import blogengine.exceptions.AbstractUnauthenticatedException;
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileUploadBase;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +26,16 @@ public class ApplicationExceptionHandler {
     public final ResponseEntity<Object> handleApplicationExceptions(final AbstractBadRequestException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
+
+//    @ExceptionHandler({AccessDeniedException.class})
+//    public final ResponseEntity<Object> handleAccessDeniedExceptions(final AccessDeniedException ex) {
+//        return ResponseEntity.status(HttpStatus.OK).build();
+//    }
+//
+//    @ExceptionHandler({UnauthenticatedUserException.class})
+//    public final ResponseEntity<Object> handleUnauthenticatedUserExceptionExceptions(final UnauthenticatedUserException ex) {
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//    }
 
     @ExceptionHandler(AbstractUnauthenticatedException.class)
     protected final ResponseEntity<Object> handleUnauthenticatedException(final AbstractUnauthenticatedException ex) {

@@ -1,29 +1,20 @@
 package blogengine.security;
 
-import blogengine.controllers.ApiAuthController;
 import blogengine.mappers.UserDtoMapper;
-import blogengine.models.dto.authdto.AuthenticationResponse;
-import blogengine.models.dto.authdto.LoginRequest;
 import blogengine.util.SessionStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @Slf4j
 @Configuration
@@ -33,7 +24,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CustomUserDetailsService userDetailsService;
     private final BCryptPasswordEncoder encoder;
-    private final ApiAuthController authController;
     private final SessionStorage sessionStorage;
     private final UserDtoMapper userDtoMapper;
 
@@ -42,10 +32,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         CustomUsernamePasswordAuthFilter authenticationFilter
                 = new CustomUsernamePasswordAuthFilter();
         authenticationFilter.setAuthenticationSuccessHandler(new CustomAuthenticationSuccessHandler(sessionStorage, userDtoMapper));
-        authenticationFilter.setAuthenticationFailureHandler(new CustomAccessDeniedHandler());
+        authenticationFilter.setAuthenticationFailureHandler(new CustomAuthenticationFailureHandler());
         authenticationFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/api/auth/login", "POST"));
         authenticationFilter.setAuthenticationManager(authenticationManagerBean());
         return authenticationFilter;
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler deniedHandler = new CustomAccessDeniedHandler();
+        return deniedHandler;
     }
 
     @Override
@@ -67,20 +63,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .and()
 //                .cors()
 //                .and()
-//                .authorizeRequests()
-//                .antMatchers("/api/post", "/login").hasRole("USER")
-//                .antMatchers("/api/auth/login").permitAll()
-//                .and()
+                .authorizeRequests()
+//                .antMatchers(HttpMethod.POST, "/api/post/**").hasRole(Role.USER.name())
+                .antMatchers(HttpMethod.PUT, "/api/post/**").hasAnyRole(Role.USER.name(), Role.MODERATOR.name())
+//                .antMatchers(HttpMethod.POST, "/api/*").hasAnyRole(Role.USER.name(), Role.MODERATOR.name())
+                .antMatchers("/api/auth/login", "/css/*", "/js/*").permitAll()
+                .and()
 //                .formLogin()
 //                .loginPage("/login")
 //                .loginProcessingUrl("/api/auth/login")
 //                .usernameParameter("e_mail")
 //                .passwordParameter("password")
-//                .failureHandler(this::loginFailureHandler);
-//                .and()
-//                .logout()
-//                .and()
-
+                .logout().logoutUrl("/api/auth/logout")
+                .and()
+                .exceptionHandling().accessDeniedHandler(accessDeniedHandler())
+                .and()
                 .addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 

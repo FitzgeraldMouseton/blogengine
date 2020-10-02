@@ -1,30 +1,30 @@
 package blogengine.security;
 
-import blogengine.models.dto.ErrorResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.stereotype.Component;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 
 @Slf4j
-@Component
-public class CustomAccessDeniedHandler implements AuthenticationFailureHandler {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     @Override
-    public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse response, AuthenticationException e) throws IOException, ServletException {
-        response.setStatus(HttpStatus.OK.value());
-        ErrorResponse errorResponse = new ErrorResponse(Collections.emptyMap());
-        response.getOutputStream()
-                .println(objectMapper.writeValueAsString(errorResponse));
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       AccessDeniedException exception) throws IOException, ServletException {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("CustomAccessDeniedHandler: " + exception.getMessage());
+        if (authentication == null) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        }
     }
+
 }

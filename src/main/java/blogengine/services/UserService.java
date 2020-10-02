@@ -1,10 +1,13 @@
 package blogengine.services;
 
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.User;
 import blogengine.repositories.UserRepository;
 import blogengine.util.SessionStorage;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -33,11 +36,13 @@ public class UserService {
     }
 
     public User getCurrentUser() {
-        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (!sessionStorage.getSessions().containsKey(sessionId)) {
-            return null;
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new UnauthenticatedUserException();
         }
-        Integer userId = sessionStorage.getSessions().get(sessionId);
-        return userRepository.findById(userId).orElse(null);
+        else {
+            return userRepository.findByEmail(authentication.getName()).orElseThrow(UnauthenticatedUserException::new);
+        }
     }
 }

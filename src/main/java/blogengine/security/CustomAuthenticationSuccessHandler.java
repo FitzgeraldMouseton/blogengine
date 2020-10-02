@@ -30,11 +30,12 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
 
         response.setStatus(HttpStatus.OK.value());
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         User user = (User) authentication.getPrincipal();
+//        user.getAuthorities().forEach(grantedAuthority -> log.info(grantedAuthority.toString()));
         Integer userId = user.getId();
         sessionStorage.getSessions().put(sessionId, userId);
         UserLoginResponse loginDto = userDtoMapper.userToLoginResponse(user);

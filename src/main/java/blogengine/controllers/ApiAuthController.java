@@ -22,10 +22,10 @@ public class ApiAuthController {
     private final AuthService authService;
     private final CaptchaService captchaService;
 
-    @PostMapping("login")
-    public ResponseEntity<AuthenticationResponse> login(@RequestBody final LoginRequest loginRequest) {
-        return ResponseEntity.ok(authService.login(loginRequest));
-    }
+//    @PostMapping("login")
+//    public ResponseEntity<AuthenticationResponse> login(@RequestBody final LoginRequest loginRequest) {
+//        return ResponseEntity.ok(authService.login(loginRequest));
+//    }
 
     @PostMapping("register")
     public ResponseEntity<SimpleResponseDto> register(@Valid @RequestBody final RegisterRequest registerRequest) {
@@ -56,8 +56,8 @@ public class ApiAuthController {
         return ResponseEntity.ok().body(authService.setNewPassword(setPassDto));
     }
 
-    @GetMapping("logout")
-    public SimpleResponseDto logout(final HttpServletRequest request) throws ServletException {
-        return authService.logout(request);
-    }
+//    @GetMapping("logout")
+//    public SimpleResponseDto logout(final HttpServletRequest request) throws ServletException {
+//        return authService.logout(request);
+//    }
 }

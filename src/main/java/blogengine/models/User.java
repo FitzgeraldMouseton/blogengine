@@ -1,6 +1,7 @@
 package blogengine.models;
 
 import blogengine.models.postconstants.UserConstraints;
+import blogengine.security.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.Type;
@@ -53,6 +54,7 @@ public class User implements UserDetails {
     private String photo;
 
     @JsonIgnore
+    @Transient
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Post> posts = new ArrayList<>();
 
@@ -128,7 +130,13 @@ public class User implements UserDetails {
     public String toString() {
         return "User{" +
                 "id=" + id +
+                ", isModerator=" + isModerator +
+                ", regTime=" + regTime +
                 ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", code='" + code + '\'' +
+                ", photo='" + photo + '\'' +
                 '}';
     }
 
@@ -137,7 +145,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + Role.USER.name()));
     }
 
     @Override

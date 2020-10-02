@@ -28,18 +28,14 @@ public class CustomUsernamePasswordAuthFilter extends UsernamePasswordAuthentica
             requestBody = IOUtils.toString(request.getReader());
             LoginRequest authRequest = objectMapper.readValue(requestBody, LoginRequest.class);
 
-            log.info("filter:" + authRequest.getEmail());
-            log.info("filter:" + authRequest.getPassword());
-
             UsernamePasswordAuthenticationToken token
                     = new UsernamePasswordAuthenticationToken(authRequest.getEmail(),
                                                                 authRequest.getPassword());
 
+            log.info("Attempt auth");
             setDetails(request, token);
 
             Authentication authentication = this.getAuthenticationManager().authenticate(token);
-            log.info("Custom filter: " + authentication);
-            log.info("Custom filter: " + (this.getAuthenticationManager().toString()));
             return authentication;
         } catch(IOException e) {
             throw new InternalAuthenticationServiceException("jk", e);
