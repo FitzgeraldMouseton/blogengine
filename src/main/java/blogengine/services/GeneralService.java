@@ -163,7 +163,7 @@ public class GeneralService {
             comment.setParent(parent);
         }
         comment.setText(request.getText());
-        comment.setTime(LocalDateTime.now());
+        comment.setTime(LocalDateTime.now(ZoneOffset.UTC));
 //        comment.setPost(post);
 //        post.getComments().add(comment);
 //        comment.setUser(user);

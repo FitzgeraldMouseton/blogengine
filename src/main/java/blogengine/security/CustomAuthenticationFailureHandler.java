@@ -1,6 +1,5 @@
 package blogengine.security;
 
-import blogengine.models.dto.ErrorResponse;
 import blogengine.models.dto.SimpleResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 
 @Slf4j
 @Component
@@ -24,9 +23,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
     @Override
     public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse response, AuthenticationException e) throws IOException, ServletException {
         log.info("CustomAuthenticationFailureHandler: " + e.getMessage());
-        response.setStatus(HttpStatus.OK.value());
-        ErrorResponse errorResponse = new ErrorResponse(Collections.emptyMap());
-        response.getOutputStream()
+        response.setStatus(HttpStatus.OK.value());response.getOutputStream()
                 .println(objectMapper.writeValueAsString(new SimpleResponseDto(false)));
     }
 }

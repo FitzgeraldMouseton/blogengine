@@ -8,7 +8,6 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +19,7 @@ import java.io.IOException;
 public class CustomUsernamePasswordAuthFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) {
 
         final ObjectMapper objectMapper = new ObjectMapper();
         String requestBody;
@@ -35,10 +34,9 @@ public class CustomUsernamePasswordAuthFilter extends UsernamePasswordAuthentica
             log.info("Attempt auth");
             setDetails(request, token);
 
-            Authentication authentication = this.getAuthenticationManager().authenticate(token);
-            return authentication;
+            return this.getAuthenticationManager().authenticate(token);
         } catch(IOException e) {
-            throw new InternalAuthenticationServiceException("jk", e);
+            throw new InternalAuthenticationServiceException("Auth is failed - " + e.getMessage(), e.getCause());
         }
     }
 }

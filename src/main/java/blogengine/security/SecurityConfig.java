@@ -6,15 +6,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Configuration
@@ -40,19 +48,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
-        CustomAccessDeniedHandler deniedHandler = new CustomAccessDeniedHandler();
-        return deniedHandler;
+        return new CustomAccessDeniedHandler();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // Вариант создания encoder. По умолчанию создается Bcrypt
+        // PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
         auth.userDetailsService(userDetailsService).passwordEncoder(encoder);
+    }
+
+    // Чтобы Security не блокировал стили
+    @Override
+    public void configure(WebSecurity web) {
+        // Для всех перечисленных паттернов в FilterChain создадутся пустые цепочки фильтров
+        web.ignoring().mvcMatchers("/css/**", "/js/**");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        http.csrf().disable()
+        http.csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .and()
 //                .exceptionHandling()
 //                .accessDeniedHandler((request, response, accessDeniedException) -> {
 //                    response.sendError(HttpServletResponse.SC_OK);
@@ -60,22 +78,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //                .authenticationEntryPoint((request, response, authException) -> {
 //                    response.sendError(HttpServletResponse.SC_OK);
 //                })
-//                .and()
-//                .cors()
-//                .and()
                 .authorizeRequests()
 //                .antMatchers(HttpMethod.POST, "/api/post/**").hasRole(Role.USER.name())
-                .antMatchers(HttpMethod.PUT, "/api/post/**").hasAnyRole(Role.USER.name(), Role.MODERATOR.name())
+//                .antMatchers(HttpMethod.PUT, "/api/post/**").hasAnyRole(Role.USER.name(), Role.MODERATOR.name())
 //                .antMatchers(HttpMethod.POST, "/api/*").hasAnyRole(Role.USER.name(), Role.MODERATOR.name())
-                .antMatchers("/api/auth/login", "/css/*", "/js/*").permitAll()
+                .mvcMatchers("/api/auth/login").permitAll()
+
                 .and()
-//                .formLogin()
-//                .loginPage("/login")
+//                .formLogin().loginProcessingUrl("/api/auth/login")
+//                .and()
 //                .loginProcessingUrl("/api/auth/login")
 //                .usernameParameter("e_mail")
 //                .passwordParameter("password")
-                .logout().logoutUrl("/api/auth/logout")
-                .and()
+//                .logout().logoutUrl("/api/auth/logout")
+//                .and()
                 .exceptionHandling().accessDeniedHandler(accessDeniedHandler())
                 .and()
                 .addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class);
