@@ -1,6 +1,5 @@
 package blogengine.mappers;
 
-import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.*;
 import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
@@ -10,7 +9,6 @@ import blogengine.services.PostService;
 import blogengine.services.SettingService;
 import blogengine.services.TagService;
 import blogengine.services.UserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.springframework.context.annotation.Lazy;
@@ -85,9 +83,6 @@ public class PostDtoMapper {
 
     public Post postDtoToPost(final Post post, final AddPostRequest request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         post.setUser(user);
         post.setTitle(request.getTitle());
         post.setText(request.getText());

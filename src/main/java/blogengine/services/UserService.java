@@ -1,5 +1,6 @@
 package blogengine.services;
 
+import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.User;
 import blogengine.repositories.UserRepository;
 import blogengine.util.SessionStorage;
@@ -35,7 +36,7 @@ public class UserService {
     public User getCurrentUser() {
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         if (!sessionStorage.getSessions().containsKey(sessionId)) {
-            return null;
+            throw new UnauthenticatedUserException();
         }
         Integer userId = sessionStorage.getSessions().get(sessionId);
         return userRepository.findById(userId).orElse(null);

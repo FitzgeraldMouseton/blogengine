@@ -9,7 +9,8 @@ import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
-public class DBEventsCreator {
+public class
+DBEventsCreator {
 
     private final JdbcTemplate jdbcTemplate;
 

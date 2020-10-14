@@ -45,7 +45,6 @@ public class ApplicationExceptionHandler {
                 .getFieldErrors()
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
-        errors.forEach((k, v) -> log.info(k + ": " + v));
         return ResponseEntity.ok().body(new ErrorResponse(errors));
     }
 

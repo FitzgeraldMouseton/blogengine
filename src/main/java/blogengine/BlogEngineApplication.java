@@ -1,5 +1,9 @@
 package blogengine;
 
+/*
+ * http://springbootblog-env.eba-gedscb4d.us-east-2.elasticbeanstalk.com/posts/recent
+ */
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;

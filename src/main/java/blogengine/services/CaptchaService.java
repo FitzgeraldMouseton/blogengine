@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.List;
 
 @Slf4j
@@ -82,7 +83,8 @@ public class CaptchaService {
             ImageIO.write(image, "png", os);
             captchaDto.setSecret(secretCode);
             captchaDto.setImage("data:image/png;charset=utf-8;base64, "
-                    + java.util.Base64.getEncoder().encodeToString(os.toByteArray()));
+                    + Base64.getEncoder().encodeToString(os.toByteArray()));
+            log.info(captchaDto.getImage());
 
         } catch (IOException e) {
             e.printStackTrace();

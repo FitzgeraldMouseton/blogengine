@@ -1,10 +1,12 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.exceptions.blogexeptions.PageNotFoundException;
 import blogengine.mappers.PostDtoMapper;
-import blogengine.models.*;
+import blogengine.models.ModerationStatus;
+import blogengine.models.Post;
+import blogengine.models.User;
+import blogengine.models.Vote;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.ModerationResponse;
 import blogengine.models.dto.blogdto.postdto.AddPostRequest;
@@ -14,7 +16,6 @@ import blogengine.models.dto.blogdto.votedto.VoteRequest;
 import blogengine.repositories.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -115,9 +119,6 @@ public class PostService {
 
     public PostsInfoResponse<PostDto> findCurrentUserPosts(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         List<Post> posts;
         long postsCount;
         Pageable pageable = PageRequest.of(offset/limit, limit);
@@ -148,9 +149,6 @@ public class PostService {
 
     public PostsInfoResponse<ModerationResponse> findPostsForModeration(final int offset, final int limit, final String status) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         if(user.isModerator()) {
             long count;
             List<Post> posts;
@@ -227,9 +225,6 @@ public class PostService {
     @Transactional
     public SimpleResponseDto addPost(final AddPostRequest request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         if (!settingService.isMultiUserEnabled() && !user.isModerator()) {
             throw new NotEnoughPrivilegesException("Публиковать посты может только модератор");
         } else {
@@ -253,9 +248,6 @@ public class PostService {
     @Transactional
     public SimpleResponseDto likePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote like = voteService.findLike(post, user);
         if (like != null || post == null) {
@@ -272,9 +264,6 @@ public class PostService {
     @Transactional
     public SimpleResponseDto dislikePost(final VoteRequest request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         Post post = postRepository.findById(request.getPostId()).orElse(null);
         Vote dislike = voteService.findDislike(post, user);
         if (dislike != null || post == null) {

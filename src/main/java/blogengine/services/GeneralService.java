@@ -1,7 +1,6 @@
 package blogengine.services;
 
 import blogengine.exceptions.authexceptions.NotEnoughPrivilegesException;
-import blogengine.exceptions.authexceptions.UnauthenticatedUserException;
 import blogengine.models.*;
 import blogengine.models.dto.SimpleResponseDto;
 import blogengine.models.dto.blogdto.CalendarDto;
@@ -71,9 +70,6 @@ public class GeneralService {
     @Transactional
     public void moderation(final ModerationRequest request) {
         User moderator = userService.getCurrentUser();
-        if (moderator == null) {
-            throw new UnauthenticatedUserException();
-        }
         Post post = postService.findPostById(request.getPostId());
         if ("decline".equals(request.getDecision())) {
             post.setModerationStatus(ModerationStatus.DECLINE);
@@ -87,9 +83,6 @@ public class GeneralService {
 
     public StatisticsDto getCurrentUserStatistics() {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         long postsCount = postService.countUserPosts(user);
         Post firstPost = postService.findFirstPostOfUser(user);
         long firstPostDate = firstPost.getTime().toEpochSecond(ZoneOffset.UTC);
@@ -123,39 +116,9 @@ public class GeneralService {
         return calendarDto;
     }
 
-//    public CalendarDto calendar(final int year) {
-//        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-//        CalendarDto calendarDto = new CalendarDto();
-//        Map<String, Long> posts = new HashMap<>();
-//
-//        String yearsSql = "select distinct year(time) from posts " +
-//                "where is_active = 1 and moderation_status = 'ACCEPTED'";
-//
-//        String postPerYearSql = "select date(time) as date, count(*) as count from posts " +
-//                "where is_active = 1 and moderation_status = 'ACCEPTED' and time like '%" + year + "%' " +
-//                "group by date order by date desc";
-//
-//        List<Integer> years = jdbcTemplate.queryForList(yearsSql, Integer.class);
-//
-//        List<Map<String, Object>> datesInYear = jdbcTemplate.queryForList(postPerYearSql);
-//
-//        datesInYear.forEach(dates -> {
-//            Date date = (Date) dates.get("date");
-//            Long count = (Long) dates.get("count");
-//            posts.put(date.toString(), count);
-//        });
-
-//        calendarDto.setPosts(posts);
-//        calendarDto.setYears(years.toArray(Integer[]::new));
-//        return calendarDto;
-//    }
-
     @Transactional
     public CommentResponse addComment(final CommentRequest request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         Comment comment = new Comment();
         Post post = postService.findPostById(Integer.parseInt(request.getPostId()));
         if (request.getParentId() != null && !request.getParentId().isEmpty()) {
@@ -185,9 +148,6 @@ public class GeneralService {
 
     public void changeSettings(final Map<String, Boolean> request) {
         User user = userService.getCurrentUser();
-        if (user == null) {
-            throw new UnauthenticatedUserException();
-        }
         if (user.isModerator()) {
             request.keySet().forEach(k -> {
                 GlobalSetting setting = settingService.getSettingByCode(k);
@@ -345,3 +305,30 @@ public class GeneralService {
 //    final Integer[] years = posts.stream().map(post -> post.getTime().getYear()).distinct()
 //            .sorted(Comparator.reverseOrder()).toArray(Integer[]::new);
 
+
+//    public CalendarDto calendar(final int year) {
+//        dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//        CalendarDto calendarDto = new CalendarDto();
+//        Map<String, Long> posts = new HashMap<>();
+//
+//        String yearsSql = "select distinct year(time) from posts " +
+//                "where is_active = 1 and moderation_status = 'ACCEPTED'";
+//
+//        String postPerYearSql = "select date(time) as date, count(*) as count from posts " +
+//                "where is_active = 1 and moderation_status = 'ACCEPTED' and time like '%" + year + "%' " +
+//                "group by date order by date desc";
+//
+//        List<Integer> years = jdbcTemplate.queryForList(yearsSql, Integer.class);
+//
+//        List<Map<String, Object>> datesInYear = jdbcTemplate.queryForList(postPerYearSql);
+//
+//        datesInYear.forEach(dates -> {
+//            Date date = (Date) dates.get("date");
+//            Long count = (Long) dates.get("count");
+//            posts.put(date.toString(), count);
+//        });
+//
+//        calendarDto.setPosts(posts);
+//        calendarDto.setYears(years.toArray(Integer[]::new));
+//        return calendarDto;
+//    }
